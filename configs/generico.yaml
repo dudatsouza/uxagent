@@ -1,0 +1,15 @@
+# Controle "agente genérico": mesma ficha de Lúcia no prompt, M1--M6 desligados.
+# Mede quanto do efeito vem dos mecanismos e não da encenação.
+nome: generico
+persona_id: generico-lucia-v1
+grupo: P
+ficha: ficha_lucia.txt
+congelado: false
+mecanismos: {M1: false, M2: false, M3: false, M4: false, M5: false, M6: false}
+parametros: {}
+llm:
+  modelo: claude-sonnet-5-5
+  effort: low
+  max_tokens: 4000
+  fallbacks: default
+  max_retries: 2

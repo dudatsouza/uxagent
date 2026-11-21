@@ -1,0 +1,14 @@
+# Agente neutro de comparação: sem ficha de persona e com M1--M6 em valores neutros.
+nome: neutro
+persona_id: neutro-v1
+grupo: C
+ficha: null
+congelado: false
+mecanismos: {M1: false, M2: false, M3: false, M4: false, M5: false, M6: false}
+parametros: {}
+llm:
+  modelo: claude-sonnet-5-5
+  effort: low
+  max_tokens: 4000
+  fallbacks: default
+  max_retries: 2

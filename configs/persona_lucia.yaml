@@ -1,0 +1,20 @@
+# Perfil: pessoa idosa novata em automação (persona Lúcia). Distribuições da Tabela III da Fase II.
+nome: lucia
+persona_id: lucia-v1
+grupo: P                 # P = perfil; C = comparador
+ficha: ficha_lucia.txt   # null = agente neutro, sem ficha
+congelado: false         # true só depois da calibração; exigido para rodar V1/V2
+mecanismos: {M1: true, M2: true, M3: true, M4: true, M5: true, M6: true}
+parametros:
+  p_atr:  {tipo: uniforme, min: 0.2, max: 0.8}
+  q_rot:  {tipo: uniforme, min: 0.0, max: 0.9}
+  p_slip: {tipo: triangular, min: 0.01, moda: 0.06, max: 0.15}
+  p_hes:  {tipo: uniforme, min: 0.1, max: 0.9}
+  r_nota: {tipo: uniforme, min: 0.5, max: 1.0}
+  c_comp: {tipo: uniforme, min: 0.6, max: 1.0}
+llm:
+  modelo: claude-sonnet-5-5   # fixado na Fase II
+  effort: low
+  max_tokens: 4000
+  fallbacks: default          # fallback do servidor em caso de recusa; o modelo servido é registrado
+  max_retries: 2
