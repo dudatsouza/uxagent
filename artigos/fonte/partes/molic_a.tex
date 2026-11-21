@@ -1,0 +1,56 @@
+\resizebox{\textheight}{!}{%
+\begin{tikzpicture}[
+  scene/.style={draw, rounded corners=6pt, text width=3.3cm, align=left, font=\scriptsize, inner sep=3pt, fill=white},
+  proc/.style={fill=black, minimum width=6mm, minimum height=3mm, inner sep=0pt},
+  ua/.style={draw, fill=gray!25, text width=7.6cm, align=center, font=\scriptsize, inner sep=4pt},
+  tr/.style={-{Latex[length=1.8mm]}, thin},
+  rec/.style={tr, dashed},
+  lab/.style={font=\tiny, align=center, fill=white, inner sep=1pt},
+  conn/.style={font=\scriptsize\itshape, align=center}
+]
+\node[ua] (ua) at (9.2,3.6) {\textbf{Acesso ubíquo}\\barra inferior: Início, Rotinas, Histórico, Ajuda\\barra superior: Concluir, Desistir};
+\node[conn] (toS2) at (9.2,5.6) {S2 Rotinas (Fig.~\ref{fig:molic-b})};
+\node[circle, fill=black, minimum size=3mm, inner sep=0pt] (open) at (-3.0,0) {};
+\node[scene] (s1) at (0,0) {\cena{S1 Início}{Ver a casa}{d: aparelhos e estados\\d: aviso de mudança\\u: alternar aparelho\\u: ver por quê \textit{[B]}\\u: desfazer mudança \textit{[B]}}};
+\node[scene] (s8) at (4.8,0) {\cena{S8 Painel ``Por quê?'' [B]}{Entender a ação automática}{d: causa (rotina, hora, condição)\\u: desfazer mudança\\u: ir para a rotina\\u: fechar painel}};
+\node[scene] (s5) at (9.6,0) {\cena{S5 Histórico}{Saber quem mudou}{d: hora, aparelho, novo estado, origem}};
+\node[scene] (s6) at (14.4,0) {\cena{S6 Ajuda}{Tirar uma dúvida}{d: perguntas (Tab.~\ref{tab:ajuda})\\u: abrir tópico\\u: voltar}};
+\node[scene] (s7) at (19.2,0) {\cena{S7 Concluir}{Encerrar a tarefa}{d: Por que isso aconteceu?\\u: escolher resposta\\u: confirmar\\u: voltar}};
+\node[proc, label={[font=\tiny]left:alternar aparelho}] (p1) at (-1.0,-3.0) {};
+\node[proc, label={[font=\tiny]below:desfazer mudança}] (p2) at (2.4,-3.0) {};
+\node[conn] (toS3) at (6.6,-3.0) {S3 Rotina (Fig.~\ref{fig:molic-b})};
+\node[conn] (orig6) at (14.4,-3.0) {cena de origem};
+\node[proc, label={[font=\tiny]left:registrar fim}] (p8) at (18.4,-3.0) {};
+\node[proc, label={[font=\tiny]right:registrar desistência}] (p9) at (27.4,-3.0) {};
+\node[conn] (orig7) at (21.6,-3.0) {cena de origem};
+\node[scene, double, text width=2.6cm] (ce2) at (24.6,0) {\cena{Captura (CE2)}{Resposta ausente}{d: Escolha uma resposta antes de confirmar.}};
+\node[circle, draw, double, double distance=1pt, fill=black, minimum size=3mm, inner sep=0pt] (close) at (22.8,-5.2) {};
+\node[font=\tiny, align=left, anchor=west] at (23.1,-5.2) {fechamento:\\verificador externo\\lê o estado};
+% abertura
+\draw[tr] (open) -- node[lab, above]{d: instrução\\da tarefa} (s1);
+% S1
+\draw[tr] ([xshift=-6mm]s1.south) -- node[lab, left]{u: alternar\\aparelho} (p1);
+\draw[tr] (p1) -- node[lab, right, pos=0.6]{d: novo\\estado} ([xshift=-2mm]s1.south);
+\draw[tr] ([xshift=6mm]s1.south) -- node[lab, left]{u: desfazer [B]} (p2);
+\draw[tr] ([yshift=2mm]s1.east) -- node[lab, above]{u: ver por quê [B]} ([yshift=2mm]s8.west);
+\draw[tr] ([yshift=-4mm]s8.west) -- node[lab, below]{u: fechar} ([yshift=-4mm]s1.east);
+\draw[tr] ([xshift=-6mm]s8.south) -- node[lab, right]{u: desfazer} (p2);
+\draw[tr] (p2) to[bend left=25] node[lab, below]{d: aparelho restaurado} ([xshift=2mm]s1.south);
+\draw[tr] ([xshift=6mm]s8.south) -- node[lab, right]{u: ir para a rotina} (toS3);
+% S6 retorno
+\draw[tr] (s6) -- node[lab, right]{u: voltar\\d: retorno} (orig6);
+% S7
+\draw[tr] ([xshift=-4mm]s7.south) -- node[lab, left]{u: confirmar\\(com resposta)} (p8);
+\draw[tr] (p8) -- node[lab, left]{d: tarefa encerrada} (close);
+\draw[tr] ([yshift=3mm]s7.east) -- node[lab, above]{u: confirmar\\sem resposta} ([yshift=3mm]ce2.west);
+\draw[rec] ([yshift=-4mm]ce2.west) -- node[lab, below]{u: escolher\\resposta} ([yshift=-4mm]s7.east);
+\draw[tr] ([xshift=12mm]s7.south) -- node[lab, right]{u: voltar} (orig7);
+\draw[tr] (p9) -- node[lab, right]{d: tarefa\\interrompida} (close);
+% acesso ubíquo
+\draw[tr] (ua.south west) -- node[lab, above left]{u: ir para Início} (s1.north);
+\draw[tr] ([xshift=4mm]ua.south) -- node[lab, right]{u: ver histórico} (s5.north);
+\draw[tr] ([xshift=28mm]ua.south) -- node[lab, right, pos=0.4]{u: pedir ajuda} (s6.north);
+\draw[tr] (ua.south east) -- node[lab, above right]{u: concluir} (s7.north);
+\draw[tr] (ua.north) -- node[lab, right]{u: ver rotinas} (toS2);
+\draw[tr] (ua.east) -| node[lab, above, pos=0.25]{u: desistir} (p9);
+\end{tikzpicture}}

@@ -1,0 +1,235 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,calc}
+\usepackage[hidelinks]{hyperref}
+\renewcommand{\tablename}{Tabela}
+\renewcommand{\figurename}{Figura}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\stEV}{\textsc{ev}}
+\newcommand{\stPD}{\textsc{pd}}
+\newcommand{\stHO}{\textsc{ho}}
+\newcommand{\ev}[1]{\texttt{#1}}
+% Trechos que dependem do piloto com o LLM: aparecem em vermelho até serem preenchidos.
+\newcommand{\pendente}[1]{\textcolor{red}{[#1]}}
+\newcommand{\repo}{\url{https://github.com/dudatsouza/uxagent}}
+
+\begin{document}
+
+\title{UXAgent: Implementação de um Agente Proxy Instrumentado que Opera um Aplicativo de Automação Residencial no Lugar de uma Pessoa Idosa}
+
+\author{\IEEEauthorblockN{Maíra Beatriz de Almeida Lacerda}
+\IEEEauthorblockA{\textit{Engenharia de Computação} \\
+\textit{CEFET-MG -- Campus V}\\
+Divinópolis, Brasil \\
+maira@aluno.cefetmg.br}
+\and
+\IEEEauthorblockN{Maria Eduarda Teixeira Souza}
+\IEEEauthorblockA{\textit{Engenharia de Computação} \\
+\textit{CEFET-MG -- Campus V}\\
+Divinópolis, Brasil \\
+maria@aluno.cefetmg.br}
+}
+
+\maketitle
+
+\begin{abstract}
+Agentes baseados em modelos de linguagem costumam encenar perfis por instruções no prompt, recebem informação que o usuário real não teria e declaram o próprio sucesso, o que compromete os registros que produzem. Este artigo relata o projeto e a implementação do UXAgent, agente proxy que opera o CasaFácil, protótipo de aplicativo de automação residencial, no lugar de Lúcia, persona de 68 anos novata em automação. A interface é uma máquina de estados derivada da MoLIC; o agente recebe só os signos visíveis da tela atual, em texto literal, e responde com o número de uma das falas do usuário permitidas naquele estado, por saída estruturada. Seis mecanismos parametrizados fora do prompt (atribuição de causa, filtro de rótulos, deslize, hesitação, caderno e atualização de crença) produzem o comportamento do perfil, com parâmetros sorteados por sessão. Um verificador externo decide sucesso, erros, métodos e oito etiquetas de comunicabilidade apenas pelo estado final e pelo registro de eventos JSON. O piloto de calibração usa só as tarefas C1 e C2 e compara as métricas de sucesso, erros por oportunidade, ações e uso de ajuda com a linha de base KLM de especialista. As tarefas de validação permanecem congeladas.
+\end{abstract}
+
+\begin{IEEEkeywords}
+UXAgent, agentes baseados em LLM, MoLIC, KLM, pessoas idosas, registro de eventos.
+\end{IEEEkeywords}
+
+% =====================================================================
+\section{Introdução}
+O UXAgent é um agente proxy: um substituto computacional de um participante humano, construído sobre um LLM, que usa uma aplicação no lugar de uma persona e gera \textit{dados sintéticos de uso}, auditáveis e comparáveis a modelos de referência como o KLM~\cite{lara2026p3}, \cite{lu2025uxagent}. Três falhas recorrentes desses agentes motivam este trabalho: o perfil é obtido só por instruções de texto, o que produz simulações mal calibradas com a idade~\cite{seshadri2026}; o agente recebe informação que a pessoa não teria (estado interno, a ordem certa dos passos); e o sucesso é declarado pelo próprio agente, que não reconhece bem o fim da tarefa~\cite{griesbach2026}, \cite{zhou2026}. Comportamento crível não é comportamento válido~\cite{park2023}.
+
+\textit{Pergunta-chave}~\cite{lara2026p3}: que decisões de design da interface instrumentada, do sistema de ajuda e do acoplamento agente--sistema permitem gerar registros de tarefas auditáveis fornecendo ao agente apenas a informação que a persona teria? A resposta é uma cadeia rastreável: a especificação de design (caderno E1, anexo) $\rightarrow$ o código (repositório E2: \repo) $\rightarrow$ os registros do piloto (pacote E3). Este artigo é o relatório E4.
+
+% =====================================================================
+\section{Modelagem herdada}
+\textit{Persona e elenco}~\cite{lacerda2026faseII}. Lúcia (fictícia), 68 anos, secretária escolar aposentada, mora sozinha, usa o smartphone todos os dias para mensagens e chamadas e nunca configurou automações; a filha instalou os aparelhos e criou as rotinas. O comparador são adultos de 30 a 50 anos sem experiência em configurar automação. As faixas do perfil vêm de Tsuchiya \textit{et al.}~\cite{tsuchiya2018} e Kobayashi \textit{et al.}~\cite{kobayashi2011}; faixas sem proporção publicada são hipóteses operacionais.
+
+\textit{Interface.} O CasaFácil controla luz da sala, ar-condicionado, cafeteira e tomada do ventilador, e guarda rotinas criadas por outra pessoa. A versão~A mostra só o estado final dos aparelhos (a origem de uma mudança só aparece no Histórico); a versão~B acrescenta ao aviso de mudança os botões ``Por quê?'' e ``Desfazer''.
+
+\textit{Tarefas} (instrução literal, sem nomear telas ou botões). C1 (calibração): a luz apagou; descobrir por que e acendê-la ($A_{\min}=5$). C2 (calibração): impedir que a cafeteira ligue durante uma viagem sem perder as rotinas ($A_{\min}=5$). V1 e V2 (validação, congeladas desde 26/10/2026): tomada do ventilador e horário do ar-condicionado. A HTA de cada tarefa~\cite{annett1967} desce até o toque, que é o nível do evento registrado, e prevê erros de atribuição (E-ATR), de ação (E-ACT), deslizes (E-SLP) e lapsos (E-OMI). A HTA, como o CTT, o GOMS e o $A_{\min}$, pertence ao analista e nunca chega ao agente.
+
+\textit{Matriz de rastreabilidade.} Seis características do perfil (L1--L6) ligam-se a seis mecanismos (M1--M6) e a indicadores no registro: origem não visível $\rightarrow$ M1 atribuidor de causa ($p_{\mathrm{atr}}$); rótulos em inglês e ícones sem texto $\rightarrow$ M2 filtro de rótulos ($q_{\mathrm{rot}}$); toque fora do alvo $\rightarrow$ M3 injetor de deslize ($p_{\mathrm{slip}}$, única faixa com origem numérica~\cite[p.~93]{kobayashi2011}); receio de errar $\rightarrow$ M4 guarda de hesitação ($p_{\mathrm{hes}}$); anotações $\rightarrow$ M5 caderno ($r_{\mathrm{nota}}$); compreensão da explicação $\rightarrow$ M6 atualizador de crença ($c_{\mathrm{comp}}$).
+
+% =====================================================================
+\section{Decisões de design}
+O caderno E1 (anexo) especifica metamensagem, paridade de signos, CTT, KLM, MoLIC, rupturas, MAC e ajuda. A Tabela~\ref{tab:decisoes} reúne as decisões que respondem à pergunta-chave, com o status epistemológico: evidência (\stEV), princípio de design (\stPD) ou hipótese operacional (\stHO).
+
+\begin{table*}[!t]
+\caption{Decisões de design, justificativa e status (\stEV: evidência; \stPD: princípio de design; \stHO: hipótese operacional)}
+\label{tab:decisoes}
+\centering
+\scriptsize
+\begin{tabularx}{\textwidth}{@{}P{0.5cm}P{4.6cm}YP{0.8cm}@{}}
+\toprule
+\textbf{Id} & \textbf{Decisão} & \textbf{Justificativa} & \textbf{Status} \\
+\midrule
+D1 & Observação $o_t$ com só os signos visíveis da tela atual, em texto literal e na ordem visual & Equivalência de canal entre os dois receptores~\cite{kammersgaard1988}: o identificador interno, o estado JSON e outras telas seriam informação que a persona não tem & \stPD \\
+D2 & Nenhum botão desabilitado; captura de erro (CE2) onde seria natural desabilitar & Escrever ``desabilitado'' vazaria estado; omitir o botão diria ao agente que ele não funciona & \stPD \\
+D3 & Ícones sem texto descritos pela forma (``duas barras verticais''), nunca pela função; M2 os torna ``[ícone sem nome]'' com probabilidade $q_{\mathrm{rot}}$ & A persona vê a forma, não o nome; o LLM conhece convenções de aplicativos pelo pré-treinamento, que M2 compensa em parte & \stHO \\
+D4 & Na versão B, explicação sob demanda (``Por quê?''), e não sempre exibida & É a pergunta do estudo; torna a leitura observável (\ev{support\_open}); custa 2,73~s e um toque ao especialista (KLM) & \stPD/\stHO \\
+D5 & ``Excluir rotina'' com alerta (AL) e faixa ``Desfazer'' (RA) & Ação irreversível ao lado de controles frequentes; receio de errar~\cite[p.~37]{tsuchiya2018}; prevenção passiva exige recuperação & \stEV/\stPD \\
+D6 & Ações do agente = falas u: da MoLIC no estado atual, numeradas; resposta por saída estruturada com \texttt{enum} dos números válidos & Restringe o agente ao espaço de ações da conversa~\cite{barbosa2003molic}; resposta fora da lista é impossível por construção, e o erro de formato vira falha técnica F-FMT & \stPD \\
+D7 & Sem histórico de conversa no LLM; a continuidade fica no estado $x_t$ (crença, caderno, rótulos aprendidos e as últimas oito ações executadas, pelo texto visível) controlado fora do prompt & O histórico acumularia raciocínio do LLM sobre telas passadas, que não é memória da persona; $x_t$ é auditável. A janela de oito ações é hipótese (ver Seç.~\ref{sec:piloto}) & \stPD/\stHO \\
+D8 & Perfil produzido por M1--M6 em código, com $\theta$ sorteado por sessão de distribuições em YAML; a ficha da persona no prompt não contém instrução de encenação & Instruir o modelo a ``agir como idosa'' anula o critério~\cite{lara2026p3}; mecanismos externos são auditáveis e desligáveis~\cite{laviola2017} & \stHO \\
+D9 & Ajuda em três camadas sob demanda (dica local, Ajuda, painel ``Por quê?''), igual para pessoas e agente, não adaptativa, com texto genérico & A ajuda só chega ao agente após ação registrada (\textit{PedirAjuda})~\cite{shneiderman2018}; texto por tarefa entregaria a solução & \stPD \\
+D10 & Sucesso decidido por verificador externo a partir do estado final da interface; o encerramento declarado vale só como evento & A afirmação do agente não é critério~\cite{lara2026p3}; ``concluí'' com estado errado vira a etiqueta ``Para mim está bom'' & \stPD \\
+D11 & Rupturas (MAC) e erros detectados só por assinaturas no registro, nunca pelo texto da justificativa do LLM & Discurso do LLM não é experiência de ruptura~\cite{nielsen2010}; a mesma regra se aplica aos registros humanos & \stHO \\
+D12 & Sem temperatura configurada; \textit{fallback} de modelo em recusa marcado como \texttt{modelo\_divergente} & O modelo fixado rejeita valores de amostragem fora do padrão (a Fase II previa 0,7); execuções servidas por outro modelo são relatadas à parte & \stPD \\
+\bottomrule
+\end{tabularx}
+\end{table*}
+
+% =====================================================================
+\section{Arquitetura e acoplamento agente--sistema}
+A Fig.~\ref{fig:arq} mostra o ciclo. O agente segue $a_t \sim \pi_\theta(\cdot \mid o'_t, x_t, \tau)$ e $x_{t+1} = F_\theta(x_t, o_t, a_t)$, com $\tau$ a tarefa e $\theta$ os parâmetros de M1--M6. A cada passo:
+(1)~a \textit{interface} (\texttt{casafacil.py}), máquina de estados com nove telas, três diálogos, relógio e rotinas reativas, expõe os elementos da tela atual;
+(2)~o \textit{controlador} (\texttt{mecanismos.py}) aplica M1, M2 e M5, e o \textit{tradutor de observação} (\texttt{observacao.py}) monta $o'_t$ com as ações numeradas;
+(3)~a \textit{política} (\texttt{politicas.py}) envia ao Claude Sonnet 5.5 apenas a instrução fixa de formato, a ficha da persona, a instrução literal da tarefa, $o'_t$ e, de $x_t$, a crença, as notas do caderno e as últimas oito ações que a persona executou na tarefa, e recebe \texttt{\{"acao": n, "justificativa": "..."\}}, com \texttt{acao} restrita a \texttt{enum} $[1..n]$;
+(4)~o \textit{executor} (\texttt{executor.py}) aplica M4 (hesitação diante de ação destrutiva ou incerta, até duas vezes) e M3 (deslize para o vizinho de leiaute) e executa na interface;
+(5)~o \textit{registrador} (\texttt{registro.py}) grava cada evento;
+(6)~a tarefa termina por Concluir, Desistir, limite de $3A_{\min}$ ações ou falha técnica. Depois, o \textit{verificador} (\texttt{verificador.py}) e o cálculo de \textit{métricas} (\texttt{metricas.py}) leem só o registro. O módulo \texttt{analista.py} guarda os modelos do analista (estado-alvo, caminhos admissíveis, $A_{\min}$) e é importado apenas pelo verificador, pelas métricas e pelo executor por regras.
+
+\begin{figure}[!t]
+\centering
+\begin{tikzpicture}[font=\scriptsize,
+  b/.style={draw, rounded corners=2pt, align=center, inner sep=2.5pt, minimum height=6mm, minimum width=2.2cm},
+  a/.style={-{Latex[length=1.6mm]}}, lb/.style={font=\tiny, fill=white, inner sep=1pt}]
+\node[b] (ui) at (0,0) {Interface CasaFácil\\estado JSON (A/B)};
+\node[b] (obs) at (3.6,0) {Tradutor de\\observação};
+\node[b] (exe) at (0,-1.45) {Executor\\valida; M4, M3};
+\node[b] (mec) at (3.6,-1.45) {Controlador\\M1, M2, M5; $x_t$};
+\node[b, minimum width=1.5cm] (amo) at (6.5,-1.45) {Amostrador\\$\theta$ (YAML,\\semente)};
+\node[b, fill=blue!8] (llm) at (3.6,-2.9) {Política com LLM\\1 número da lista};
+\node[b] (reg) at (0,-2.9) {Registrador\\JSONL};
+\node[b] (ver) at (0,-4.35) {Verificador externo\\sucesso, erros, MAC};
+\node[b] (met) at (3.6,-4.35) {Métricas\\$S$, $R_k$, $A$, $X$, $U$};
+\draw[a] (ui) -- node[lb, above]{$s_t$} (obs);
+\draw[a] (obs) -- node[lb, right]{$o_t$} (mec);
+\draw[a] (mec) -- node[lb, right]{$o'_t$, $x_t$, $\tau$} (llm);
+\draw[a] (amo) -- node[lb, above]{$\theta$} (mec);
+\draw[a] (llm.west) -- ++(-0.45,0) |- node[lb, pos=0.75, above]{proposta} (exe.east);
+\draw[a] (exe) -- node[lb, left]{$a_t$} (ui);
+\draw[a, dashed] (exe) -- node[lb, left]{eventos} (reg);
+\draw[a] (reg) -- (ver);
+\draw[a] (ver) -- (met);
+\node[draw, dashed, rounded corners, fit=(mec)(llm), inner sep=3pt] (ctx) {};
+\node[font=\tiny, anchor=north east] at (ctx.south east) {contexto do LLM};
+\end{tikzpicture}
+\caption{Arquitetura do UXAgent. O retângulo tracejado delimita o que chega ao LLM; $\theta$ também regula M3 e M4 no executor; o verificador lê apenas o registro e não devolve informação ao agente.}
+\label{fig:arq}
+\end{figure}
+
+\textit{Fronteira de informação.} O LLM nunca recebe HTA, CTT, métodos GOMS, $A_{\min}$, critério de sucesso, estado JSON, outras telas, histórico da conversa, exemplos de execução, resultados anteriores ou dados de validação. Três testes automáticos verificam isso: a análise sintática dos módulos garante que o tradutor não importa \texttt{analista}, \texttt{tarefas} ou \texttt{verificador} e que a classe da política com LLM não usa \texttt{analista}; uma expressão regular percorre todas as observações de C1 e C2 nas versões A e B e reprova nomes de variáveis, de telas, de rotinas internas, ``HTA'', ``CTT'', ``GOMS'' e $A_{\min}$; e um cliente simulado confere que cada chamada leva só uma mensagem do usuário e o esquema com o \texttt{enum}.
+
+\textit{Saída restrita.} A resposta usa \textit{structured outputs} (\texttt{output\_config.format} com esquema JSON); o campo \texttt{acao} é um \texttt{enum} com os números das falas u: daquele estado. Se a resposta não puder ser lida, há uma nova solicitação; na segunda falha, F-FMT. Recusa do modelo é F-REF; erro de API é F-API; em todos os casos a tarefa vira ``indeterminada'' e é relatada à parte. O \textit{effort} é baixo, para respostas curtas, e a latência por chamada é registrada como desempenho do sistema, não como tempo da persona~\cite{laviola2017}.
+
+\textit{Controles.} (a)~\textit{Executor por regras}, que segue o método GOMS de referência com só M3 ativo e corrige seus deslizes: é o piso de ações. (b)~\textit{Agente genérico}: mesmo LLM e ficha, M1--M6 desligados, para separar o efeito dos mecanismos do da encenação. (c)~\textit{Agente neutro}: sem ficha e sem mecanismos (\texttt{configs/neutro.yaml}). (d)~\textit{Comparador}: mesma arquitetura com distribuições de usuário ``normal''.
+
+% =====================================================================
+\section{Instrumentação}
+\subsection{Esquema do registro}
+Cada sessão gera um arquivo JSON Lines. Todo evento carrega os campos comuns \texttt{event\_id} (sequencial; lacuna indica perda, F-LOG), \texttt{event\_type}, \texttt{t\_wall} (ISO 8601), \texttt{session\_id}, \texttt{subject\_id}, \texttt{persona\_id} (ficha + \textit{hash} de $\theta$), \texttt{config\_hash}, \texttt{synthetic}/\texttt{origin}, \texttt{group}, \texttt{condition}, \texttt{task\_id}, \texttt{task\_set}, \texttt{step}, \texttt{screen}, as versões (\texttt{ui\_version}, \texttt{mech\_version}, \texttt{design\_version}, \texttt{help\_hash}), \texttt{llm\_provider}, \texttt{llm\_model} e \texttt{seed}, e um objeto \texttt{data}. São 21 tipos de evento (Tabela~\ref{tab:eventos}); o dicionário de campos completo vai no pacote E3.
+
+\begin{table}[!t]
+\caption{Tipos de evento ($^*$ só sintético; $^\dagger$ derivado pelo verificador)}
+\label{tab:eventos}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabularx}{\columnwidth}{@{}>{\raggedright\arraybackslash\hyphenpenalty=10000}p{3.15cm}Y@{}}
+\toprule
+\textbf{Evento} & \textbf{Conteúdo principal} \\
+\midrule
+\ev{session\_start/end} & $\theta$, configuração, prompt de sistema; caderno final \\
+\ev{task\_start/end} & instrução, estado inicial; resultado, n.º de ações, estado final \\
+\ev{screen\_view} & tela e signos visíveis (sem ids internos) \\
+\ev{observation\_delivered}$^*$ & $o_t$ e a mensagem integral enviada ao LLM \\
+\ev{action\_proposed}$^*$ & número, fala u:, justificativa, latência, modelo servido, \textit{tokens} \\
+\ev{action\_rejected}$^*$ & hesitação (M4) e substituta \\
+\ev{action\_executed} & proposta, executada, \texttt{slip}, cena antes e depois \\
+\ev{state\_changed} & variável, antes, depois, origem (persona ou rotina) \\
+\ev{dialog\_shown/choice} & AL, CE1, CE2; opção tocada \\
+\ev{support\_open/close} & camada, tópico, cena de origem e de retorno \\
+\ev{cause\_selected} & opção marcada em ``Por que isso aconteceu?'' \\
+\ev{mechanism\_applied}$^*$, \ev{note\_written}$^*$, \ev{note\_shown}$^*$ & M1--M6 e efeito; notas do caderno \\
+\ev{technical\_failure} & F-API, F-FMT, F-REF \\
+\ev{task\_result}$^\dagger$ & sucesso, situação, erros, oportunidades, método, MAC \\
+\ev{error\_tagged}$^\dagger$, \ev{method\_selected}$^\dagger$, \ev{communicability\_}\ev{tagged}$^\dagger$ & categoria e evento de origem; método por subobjetivo; etiqueta MAC \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Regras do verificador}
+\textit{Sucesso:} a tarefa termina em \ev{task\_end(concluida)} e o estado final satisfaz o estado-alvo (C1: luz ligada e causa marcada = rotina ``Economia de energia''; C2: rotina ``Bom dia'' existe e está pausada ou sem a cafeteira). \textit{Erros:} E-ATR, causa marcada diferente da correta (``Não sei'' não conta); E-ACT, exclusão confirmada ou mudança numa rotina que não é a da tarefa; E-SLP, ação executada com \texttt{slip=true}; E-OMI, Concluir sem o estado-alvo. Cada categoria tem oportunidades explícitas, denominador de $R_k$. \textit{Rupturas (MAC)}~\cite{prates2000}: ``Cadê?'', três navegações seguidas por barra ou Voltar sem mudança de estado nem ajuda; ``O que é isto?'', dica ou tópicos H2--H4; ``Socorro!'', Ajuda; ``Epa!'', ação desfeita em até duas ações ou alerta cancelado; ``Onde estou?'', o padrão A$\rightarrow$X$\rightarrow$A duas vezes; ``Por que não funciona?'', a mesma ação repetida sem \ev{state\_changed}; ``Para mim está bom'', concluída com fracasso verificado; ``Desisto'', desistência. Cada definição é \stHO: o padrão no registro do agente não equivale à experiência humana de ruptura.
+
+\subsection{Métricas}
+$S = N_{\mathrm{corretas}}/N_{\mathrm{iniciadas}}$ (indeterminadas à parte); $R_k = N_{\mathrm{erros},k}/N_{\mathrm{oport},k}$, ND se o denominador é zero; $A$ = ações executadas, $X = A/A_{\min}$ ($X<1$ só ocorre se a causa for marcada sem consultar a origem, isto é, por palpite) e $D$ = distância de Levenshtein normalizada até o caminho admissível mais próximo; $U$ = aberturas de suporte por tarefa, por camada (ajuda, dica, por\_que), com o caderno à parte; $U_{\mathrm{pre}}$ = 1 se o primeiro suporte precede o primeiro erro; $L$ = mediana da latência do LLM. A célula de relato é tarefa $\times$ versão $\times$ grupo $\times$ configuração $\times$ modelo. A linha de base é o KLM de especialista~\cite{card1980} com P = 1,10~s, K = 0,28~s e M = 1,35~s (C1: 5 toques, 12,30~s; C2: 5 toques, 13,65~s); como o UXAgent não simula tempo, a comparação com o KLM é feita em ações ($X$), e não em segundos.
+
+% =====================================================================
+\section{Piloto}\label{sec:piloto}
+\subsection{Desenho}
+Só C1 e C2 (calibração), versões A e B, ordem contrabalançada entre sessões, sementes registradas. Duas etapas: (1)~\textit{piloto de instrumentação}, sem LLM: executor por regras (10 sessões por versão e grupo) e política aleatória (5 sessões), para conferir que todo evento é gravado e que o verificador e as métricas funcionam; (2)~\textit{piloto de calibração com o LLM}: perfil (Lúcia), agente genérico, agente neutro e comparador, 5 sessões por célula (sementes 200--204), Lúcia e comparador nas versões A e B, agente neutro e agente genérico na versão A, em um total de 30 sessões e 60 tarefas, modelo \texttt{claude-sonnet-5-5}. Os comandos estão no README do repositório.
+
+\subsection{Resultados}
+A Tabela~\ref{tab:piloto} é gerada pelo comando \texttt{python -m uxagent tabela} a partir dos arquivos de métricas; todos os valores são \textsc{sintéticos}.
+
+\begin{table*}[!t]
+\caption{Métricas do piloto por célula (dados \textsc{sintéticos}). $n$: válidas/iniciadas; $A$: média de ações (entre parênteses, $A_{\min}$ do KLM); $U$: suporte por tarefa (ajuda/dica/por quê); $L$: mediana da latência do LLM; ND: sem oportunidade}
+\label{tab:piloto}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\input{tab_piloto}
+\end{table*}
+
+\textit{Instrumentação.} Nas 60 sessões sem LLM apareceram 18 dos 21 tipos de evento; diálogos e falhas técnicas não ocorreram e são cobertos por testes unitários (40 testes, todos aprovados). O executor por regras concluiu todas as tarefas ($S=1$) com $X$ entre 1,00 e 1,06: o excesso sobre o KLM vem só dos deslizes de M3 e de sua correção, o que aparece em $R_{\mathrm{SLP}}$ entre 0,05 e 0,14 no perfil e em zero ou quase zero no comparador, coerente com as faixas de $p_{\mathrm{slip}}$. A política aleatória teve $S=0$ em todas as células, embora encerrasse tarefas tocando Concluir: o verificador não aceitou o encerramento declarado, que virou ``Para mim está bom''. Isso confirma, antes do LLM, que o sucesso depende só do estado final.
+
+\textit{Calibração com o LLM.} As 60 tarefas não tiveram falha técnica nem execução com \texttt{modelo\_divergente}; a mediana de $L$ foi 2,0~s por chamada (1,7 a 3,8~s entre execuções). Em C1-A, perfil, comparador e agente genérico concluíram todas as tarefas ($S=1$), com $X$ entre 1,76 e 1,84, acima do KLM (1) e do piso do executor por regras (1,00 a 1,04), e sem uso de ajuda ($U=0$); o agente neutro teve $S=0{,}8$. Na versão A, portanto, os mecanismos não separaram o perfil do comparador em C1: a crença errada sorteada por M1 era sempre revista no Histórico. Em C1-B, o perfil teve $S=0{,}4$, $X=2{,}36$, $R_{\mathrm{ATR}}=0{,}2$ e $U=1{,}4$, contra $S=0{,}8$, $X=1{,}56$ e $U=1{,}0$ do comparador, mas parte dessa diferença vem de um erro de implementação (D-03, abaixo), e esses números não devem ser interpretados. Em C2, todas as células com ficha de persona (perfil, comparador e genérico, 25 execuções) terminaram por limite ($S=0$, $X=3$), enquanto o agente neutro concluiu todas ($S=1$, $X=1{,}72$, editando a rotina em vez de pausá-la). Como o agente genérico, sem mecanismos, falhou da mesma forma, a falha vem da ficha no prompt e do LLM, e não de M1--M6. Etiquetas MAC mais frequentes: ``Onde estou?'' (30), ``Socorro!'' (27), ``O que é isto?'' (25) e ``Cadê?'' (19).
+
+\textit{Depuração após o piloto (D-02 e D-03).} \textit{D-02:} em C2, o agente pausava a rotina certa, via ``Pausada'', tocava Concluir e, na tela ``Você terminou?'', voltava ``para conferir'', até o limite. A memória de D-01 guardava o elemento tocado, mas não o retorno visível; ela passou a guardar também o que a tela mostrou. Em duas execuções de verificação, uma concluiu com sucesso na 15.ª ação e a outra parou no limite: a correção é parcial, e a dúvida do agente mudou de objeto (``a rotina pausada é mesmo a da cafeteira?''). O achado aponta para o protocolo: a tela de conclusão de C2 não resume o estado, e uma revisão dela exige nova versão da interface e nova calibração, e não mais ajustes no prompt. \textit{D-03:} na versão B, ``Desfazer'' apaga o aviso, e a revisão da crença pelo Histórico (M1) dependia do aviso visível; com a crença presa em ``defeito'', o filtro de M1/M6 nunca oferecia a causa correta. O erro foi corrigido e coberto por teste. Os registros do piloto são anteriores a D-02 e D-03 e ficam no pacote E3 como evidência de ambos (\texttt{docs/depuracao.md}).
+
+\textit{Depuração na calibração (D-01).} Na primeira execução com o LLM (C1, versão A), o agente alternou 14 vezes entre Histórico e Início para ``confirmar o que já lera e parou no limite de 15 ações, com a etiqueta ``Onde estou?. Diagnóstico: sem histórico de conversa e com $x_t$ restrito à crença e às notas, a persona sintética não lembrava o que já tinha feito, embora a Fase~II previsse ``suportes consultados e passos em $x_t$. Correção: $x_t$ passou a guardar as ações da tarefa, e as oito últimas entram no prompt pelo texto visível do elemento tocado (\stHO, sem valor publicado; candidata à análise de sensibilidade). Duas execuções de verificação de C1 terminaram com sucesso verificado, com 10 e 9 ações ($X = 2{,}0$ e $1{,}8$), sem laço, latência mediana de 2,0 a 2,7~s e a etiqueta ``Cadê? na busca inicial pela causa. Essa correção ocorreu antes do piloto de calibração e usou só C1.
+
+\textit{Uso do piloto na calibração.} Os registros servem para depurar o protocolo, não para responder à pergunta de pesquisa. Na calibração é permitido ajustar $\theta$ dentro das faixas e corrigir o prompt; qualquer ajuste gera nova versão de configuração (\textit{hash}) e recomeça a calibração. Nenhum resultado de V1 ou V2 entra neste artigo.
+
+% =====================================================================
+\section{Ameaças à validade}
+\textit{Vazamentos residuais de informação.} O agente lê o texto inteiro da tela a cada passo, e uma pessoa pode não ler tudo; a forma descrita de um ícone não reproduz a percepção visual; e o LLM traz do pré-treinamento convenções de aplicativos (como o ícone de duas barras) que a persona não tem. M2 compensa em parte, com probabilidade sorteada, e a diferença é declarada como hipótese.
+
+\textit{Limitações do LLM.} Usuários simulados são excessivamente cooperativos e mal calibrados com a idade~\cite{seshadri2026}, \cite{zhou2026}; a geração não é determinística, e as sementes controlam só o amostrador e os mecanismos; sem controle de temperatura, a variação entre execuções vem do próprio modelo; textos públicos semelhantes às tarefas podem ter integrado o treinamento. A justificativa do LLM é traço qualitativo e não medida.
+
+\textit{Validade de construto dos mecanismos.} M1, M2, M4, M5 e M6 são hipóteses operacionais com faixas largas que representam incerteza, e não valores ajustados; só M3 tem origem numérica, de uma amostra japonesa de 2011 que conta também toques em área vazia~\cite{kobayashi2011}. As etiquetas MAC são padrões de eventos, não a experiência de ruptura.
+
+\textit{Validade interna e de conclusão.} O piloto é pequeno; as células de calibração não permitem inferência, e a regra de decisão da Fase~II (sinal e intervalo de 90\% da discrepância dentro da tolerância) só se aplica à validação com dados humanos, que dependem de aprovação do CEP. Sem eles, o resultado declarado será inconclusivo.
+
+\textit{Validade externa.} O CasaFácil é um protótipo de baixa fidelidade em texto; a renderização visual para pessoas, sobre a mesma máquina de estados, ainda não foi construída. O KLM foi adaptado ao toque (P + K por toque), o que é hipótese. Os resultados não se transferem a aplicativos comerciais sem novo estudo.
+
+\textit{Separação calibração--validação.} V1 e V2 só rodam com uma configuração marcada como congelada e a opção \texttt{--validacao}. Antes do congelamento, V1 e V2 foram executadas uma única vez pelo executor por regras, sem LLM e sem mecanismos de persona, para conferir que a interface permite realizá-las; nada foi ajustado a partir disso, e esses registros não integram o pacote E3.
+
+% =====================================================================
+\section{Conclusão}
+O UXAgent implementa, de ponta a ponta, as condições exigidas para que registros sintéticos sejam auditáveis: a observação do agente tem paridade de signos com a tela da persona; suas ações são exatamente as falas u: da MoLIC em cada estado, impostas por saída estruturada; o comportamento do perfil vem de seis mecanismos parametrizados fora do prompt, com parâmetros sorteados e registrados; a ajuda só chega por ação registrada; e o sucesso, os erros e as rupturas são decididos por um verificador externo a partir do estado final e do registro. O piloto de instrumentação mostrou que o verificador recusa o sucesso declarado e que o piso de ações coincide com o KLM a menos dos deslizes injetados. O piloto com o LLM cumpriu seu papel de depurar o protocolo: revelou uma lacuna de memória em $x_t$ (D-01, D-02), um erro de implementação em M1 (D-03) e uma tela de conclusão que não sustenta a decisão de um usuário cauteloso em C2; e mostrou, pelo agente genérico, que parte do comportamento vem da ficha no prompt, e não dos mecanismos. Os próximos passos são a renderização visual para o piloto humano, a submissão ao CEP e, com a configuração congelada, a única rodada de validação em V1 e V2.
+
+\bibliographystyle{IEEEtran}
+\bibliography{referencias}
+
+\end{document}

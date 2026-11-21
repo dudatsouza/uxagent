@@ -1,0 +1,20 @@
+\begin{tabularx}{\textwidth}{@{}P{0.5cm}P{3.0cm}P{3.4cm}YP{0.9cm}@{}}
+\toprule
+\textbf{Id} & \textbf{Questão} & \textbf{Opções} & \textbf{Critérios e decisão} & \textbf{Status} \\
+\midrule
+D1 & Como descrever a tela ao agente? & (a) árvore de acessibilidade; (b) lista com identificadores e estados; (c) só signos visíveis em texto literal & Equivalência de canal; sem vazamento. D: (c), regras da Seção~\ref{sec:signos} & \stPD \\
+D2 & Usar botões desabilitados? & (a) sim, escrito em $o_t$; (b) sim, omitido da lista; (c) não usar & (a) vaza estado; (b) vaza que não funciona. D: (c), com CE onde seria natural desabilitar & \stPD \\
+D3 & Como expressar ícones sem texto ao agente? & (a) função (``pausar''); (b) forma; (c) omitir & (a) vaza significado; (c) esconde o que a persona vê. D: (b), com M2 para a não interpretação & \stHO \\
+D4 & Explicação na versão B & B1 sob demanda; B2 sempre exibida & Pergunta do estudo; observabilidade de $U$; densidade da tela; KLM: B2 2,73~s mais rápida. D: B1 & \stPD/\stHO \\
+D5 & Proteger ``Excluir rotina'' & (a) sem proteção; (b) AL; (c) AL + RA; (d) PA (remover de S3) & Ação irreversível ao lado de ícones; receio de errar (L4)~\cite[p.~37]{tsuchiya2018}; (d) apagaria a oportunidade de E-ACT. D: (c) & \stEV/\stPD \\
+D6 & Sair de S4 sem salvar & (a) descartar calado; (b) salvar automático; (c) CE1 & (b) mudaria a rotina sem intenção explícita; (a) gera E-OMI silencioso. D: (c), justificada por C2, não por V2 & \stPD \\
+D7 & Confirmar sem resposta em S7 & (a) desabilitar; (b) pré-marcar ``Não sei''; (c) CE2 & (a) ver D2; (b) enviesa a resposta. D: (c) & \stPD \\
+D8 & Camadas da ajuda & (a) só S6; (b) S6 + dica local; (c) ajuda adaptativa & Contextual e em camadas~\cite{barbosa2010}; (c) exigiria regras congeladas e mudaria $U$. D: (b), não adaptativa & \stPD \\
+D9 & Conteúdo procedimental da ajuda & (a) genérico, do GOMS; (b) por tarefa & (b) entregaria a solução. D: (a) & \stPD \\
+D10 & Limite do horário & (a) circular 23h$\rightarrow$0h; (b) preso em 00h--23h (PA) com nota & (a) gera erro sem sinal. D: (b), PA com PP & \stPD \\
+D11 & Onde ficam Concluir e Desistir? & (a) só ao fim; (b) barra fixa & O protocolo permite encerrar a qualquer momento; E-OMI precisa ser possível. D: (b) & \stPD \\
+D12 & Manter ícones sem texto e ``Smart Schedule''? & (a) trocar por texto em português; (b) manter & (a) seguiria a metamensagem, mas eliminaria L2, condição do estudo. D: (b), declarada como restrição; compensada pela ajuda & \stEV{} \cite[pp.~34--35]{tsuchiya2018} \\
+D13 & Aviso de mudança em A e B & (a) só em B; (b) igual nas duas & Não confundir visibilidade da iniciativa com explicação~\cite{li2026}. D: (b) & \stPD \\
+D14 & Estado do aparelho & (a) só interruptor; (b) interruptor + texto & Não depender de cor ou posição; texto literal em $o_t$ sem vazamento. D: (b) & \stPD \\
+\bottomrule
+\end{tabularx}

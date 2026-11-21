@@ -146,6 +146,18 @@ Roteiro da demonstração em vídeo (E5): `docs/roteiro_video_E5.md`.
 - Artigo DesignUXAgent (A3): `../fase_4_design/DesignUXAgent_IHC_Grupo_Lacerda_Souza.pdf`
 - Artigo E4, com o E1 anexado: `../fase_5_artigo/E4_UXAgent_IHC_Grupo_Lacerda_Souza_com_anexo_E1.pdf`
 
+## Entregas (PDFs e vídeo)
+
+| Pasta / arquivo | Conteúdo |
+|---|---|
+| `entregas/E4_Artigo_UXAgent_com_anexo_E1.pdf` | E4: artigo IEEE (6 p.) + anexo E1 (caderno de design, 14 p.) |
+| `entregas/E1_Caderno_de_Design_UXAgent.pdf` | E1 sozinho |
+| `entregas/A3_DesignUXAgent_IHC_Grupo_Lacerda_Souza.pdf` | artigo DesignUXAgent (A3) |
+| `entregas/E5_Demonstracao_UXAgent.mp4` | E5: demonstração com legenda (4 min 51 s) |
+| `entregas/E5_imagem_abertura.png` | imagem de abertura do vídeo |
+| `artigos/fonte/` | fontes LaTeX dos três documentos (compilar com `tectonic` ou `pdflatex` + `bibtex` dentro da pasta) |
+| `docs/` | dicionário de eventos, registro de depuração (D-01 a D-03) e roteiro do vídeo |
+
 ## Limitações
 
 Resultados sintéticos, válidos só para depurar protocolo e métricas. O agente não reproduz tempo, cansaço, emoção nem satisfação; a justificativa do LLM é traço qualitativo, não medida. M1, M2, M4, M5 e M6 são hipóteses operacionais (Fase II, Tabela VI).

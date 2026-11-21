@@ -1,0 +1,20 @@
+\begin{tabularx}{\textwidth}{@{}P{1.4cm}P{3.8cm}YP{1.8cm}P{3.2cm}@{}}
+\toprule
+\textbf{Estado} & \textbf{Falas u: (ações oferecidas)} & \textbf{Processo / fala d:} & \textbf{Próximo} & \textbf{Eventos} \\
+\midrule
+UA & Início; Rotinas; Histórico; Ajuda; Concluir; Desistir & Ajuda e Concluir empilham a cena de origem; Desistir encerra & S1; S2; S5; S6; S7; FIM & \ev{screen\_view}; \ev{support\_open}; \ev{task\_end(desistencia)} \\
+S1 & alternar <aparelho> (4); [B] Por quê?; [B] Desfazer & alternar: novo estado; Desfazer: restaura o aparelho, aviso some & S1; S8; S1 & \ev{action\_executed}, \ev{state\_changed(origem=pessoa)}; \ev{support\_open(por\_que)} \\
+S8 [B] & Desfazer; Ir para a rotina; Fechar & Desfazer: restaura; painel mostra ``Feito'' & S8; S3; S1 & \ev{state\_changed}; \ev{screen\_view}; \ev{support\_close} \\
+S2 & abrir <rotina>; Desfazer exclusão (se faixa visível) & restaurar rotina excluída & S3; S2 & \ev{screen\_view}; \ev{state\_changed(restaurada)} \\
+S3 & Voltar; pausar|retomar (ícone); editar (ícone); ?; Excluir rotina & pausar/retomar: situação alterna & S2; S3; S4; S9; AL & \ev{state\_changed(status)}; \ev{support\_open(dica)}; \ev{dialog\_shown(AL)} \\
+AL & Cancelar; Excluir & excluir: rotina sai da lista; faixa ``Desfazer'' em S2 & S3; S2 & \ev{dialog\_choice}; \ev{state\_changed(excluida)} \\
+S4 & Cancelar; $-$; $+$; marcar|desmarcar <aparelho>; ?; Salvar & $\pm$: horário $\pm$1~h, preso em 00h--23h (PA); Salvar: grava; Cancelar com alterações: CE1 & S4; S3; CE1; S9 & \ev{action\_executed}; \ev{state\_changed}; \ev{dialog\_shown(CE)} \\
+CE1 & Salvar; Sair sem salvar & salvar grava; sair descarta & S3 & \ev{dialog\_choice}; \ev{state\_changed} \\
+S5 & (só UA) & --- & --- & \ev{screen\_view(S5)} \\
+S6 & abrir <tópico>; Voltar & mostra a resposta; Voltar desempilha & S6; origem & \ev{support\_open(ajuda, tópico)}; \ev{support\_close} \\
+S9 & Fechar & desempilha & origem & \ev{support\_close} \\
+S7 & escolher <opção>; Confirmar; Voltar & Confirmar com opção: registrar fim; sem opção: CE2 & S7; FIM; S7; origem & \ev{cause\_selected}; \ev{task\_end(concluida)}; \ev{dialog\_shown(CE)} \\
+FIM & --- & verificador externo lê o JSON final e decide sucesso & --- & \ev{task\_end}; \ev{error\_tagged}; \ev{method\_selected}; \ev{communicability\_tagged} \\
+(controlador) & --- & limite de $3A_{\min}$ ações ou falha técnica & FIM & \ev{task\_end(limite|indeterminado)}; \ev{technical\_failure} \\
+\bottomrule
+\end{tabularx}

@@ -1,0 +1,573 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{xcolor}
+\usepackage{rotating}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,babel,calc}
+\usepackage[edges]{forest}
+\usepackage[hidelinks]{hyperref}
+\renewcommand{\tablename}{Tabela}
+\renewcommand{\figurename}{Figura}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcommand{\stEV}{\textsc{ev}}
+\newcommand{\stPD}{\textsc{pd}}
+\newcommand{\stHO}{\textsc{ho}}
+\newcommand{\enab}{\ensuremath{\gg}}
+\newcommand{\enabinfo}{\ensuremath{[\,]\!\gg}}
+\newcommand{\choice}{\ensuremath{[\,]}}
+\newcommand{\interl}{\ensuremath{|||}}
+\newcommand{\ordind}{\ensuremath{|\!=\!|}}
+\newcommand{\deact}{\ensuremath{[>}}
+\newcommand{\susp}{\ensuremath{|>}}
+\newcommand{\iter}{\ensuremath{^{*}}}
+\newcommand{\ev}[1]{\texttt{#1}}
+\newcommand{\cena}[3]{\textbf{#1}\\\textit{#2}\\[-2pt]\rule{\linewidth}{0.3pt}\\#3}
+% referências cruzadas para tabelas que vivem nos arquivos de partes/
+\makeatletter\newcommand{\fakelabel}[2]{\protected@edef\@currentlabel{#2}\label{#1}}\makeatother
+
+% --------------------------------------------------------------- wireframes
+\newcommand{\celular}[3]{% posição, título, conteúdo
+  \begin{scope}[shift={#1}]
+  \draw[rounded corners=5pt, thick] (0,0) rectangle (3.3,6.2);
+  \node[font=\scriptsize\bfseries, anchor=south] at (1.65,6.25) {#2};
+  \draw (0.1,5.75) rectangle (3.2,5.95);
+  \node[font=\tiny] at (0.85,5.85) {Concluir}; \node[font=\tiny] at (2.45,5.85) {Desistir};
+  \draw (0.1,0.1) rectangle (3.2,0.5);
+  \foreach \x/\t in {0.48/Início,1.25/Rotinas,2.02/Histórico,2.78/Ajuda}{\node[font=\tiny] at (\x,0.3) {\t};}
+  #3
+  \end{scope}}
+\newcommand{\aparelho}[3]{% y, nome, estado
+  \node[font=\tiny, anchor=west] at (0.2,#1+0.1) {#2};
+  \node[font=\tiny, anchor=west, gray] at (0.2,#1-0.12) {#3};
+  \draw[rounded corners=2.5pt] (2.55,#1-0.12) rectangle (3.05,#1+0.12);
+  \fill (2.68,#1) circle (0.08);}
+\newcommand{\aparelhoL}[2]{% aparelho ligado: botão à direita, trilho preenchido
+  \node[font=\tiny, anchor=west] at (0.2,#1+0.1) {#2};
+  \node[font=\tiny, anchor=west, gray] at (0.2,#1-0.12) {Ligada};
+  \draw[rounded corners=2.5pt, fill=gray!45] (2.55,#1-0.12) rectangle (3.05,#1+0.12);
+  \fill[white, draw=black] (2.92,#1) circle (0.08);}
+
+\begin{document}
+
+\title{Design da Interface Instrumentada, do Sistema de Ajuda e do Acoplamento Interface--Agente do UXAgent no Aplicativo CasaFácil}
+
+\author{\IEEEauthorblockN{Maíra Beatriz de Almeida Lacerda}
+\IEEEauthorblockA{\textit{Engenharia de Computação} \\
+\textit{CEFET-MG -- Campus V}\\
+Divinópolis, Brasil \\
+maira@aluno.cefetmg.br}
+\and
+\IEEEauthorblockN{Maria Eduarda Teixeira Souza}
+\IEEEauthorblockA{\textit{Engenharia de Computação} \\
+\textit{CEFET-MG -- Campus V}\\
+Divinópolis, Brasil \\
+maria@aluno.cefetmg.br}
+}
+
+\maketitle
+
+\begin{abstract}
+Este artigo especifica o design da interface instrumentada, do sistema de ajuda e do acoplamento interface--agente do UXAgent, agente proxy baseado em modelo de linguagem que opera um aplicativo no lugar de uma persona. A persona primária é Lúcia, 68 anos, usuária diária de smartphone e novata em automação residencial; a interface é o CasaFácil, aplicativo móvel fictício que controla quatro aparelhos e as rotinas automáticas criadas por outra pessoa da família. A metamensagem diz, numa frase: você pode ver o que a casa fez sozinha, saber quem fez e desfazer ou impedir a mudança, sem perder o que foi programado. O modelo conceitual é o de um painel de aparelhos com interruptores, um diário de mudanças e regras do tipo se--então, operado por manipulação direta e navegação por abas, sem digitação. O agente observa apenas os signos visíveis da tela atual, em texto literal e com ícones descritos pela forma, e age escolhendo o número de uma das falas do usuário que a MoLIC prevê para aquele estado; a resposta é restrita por saída estruturada. A ajuda tem três camadas sob demanda, a dica local, a Ajuda com dez tópicos organizados por tipo de dúvida e, na versão B, o painel Por quê?, e só chega ao agente depois de uma ação registrada. A principal decisão é oferecer a explicação da ação automática sob demanda, e não sempre exibida: ela custa ao especialista 2,7 segundos e um toque, mas torna a leitura da explicação observável no registro e carrega a hipótese de que explicações sob demanda reduzem os erros de atribuição de causa. Ficam congelados a interface, o texto da ajuda, o tradutor de observação, os prompts, as distribuições dos mecanismos e as tarefas de validação.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Engenharia semiótica, MoLIC, sistema de ajuda, agentes baseados em LLM, pessoas idosas.
+\end{IEEEkeywords}
+
+% =====================================================================
+\section{Introdução}
+
+O Alinhamento Rastreável (Fase~II)~\cite{lacerda2026faseII} perguntou se um proxy baseado em LLM, parametrizado, produz registros de tarefas úteis para depurar um protocolo e se suas diferenças de desempenho concordam com observações humanas em tarefas não usadas na calibração. A pergunta desta fase antecede os dados: \textit{que decisões de design da interface instrumentada, do sistema de ajuda e do acoplamento interface--agente permitem gerar esses registros sem dar ao agente informação que a persona não teria?}~\cite{lara2026a3}
+
+Para o UXAgent, a interface é o mundo: tudo o que o agente pode saber chega por signos estáticos, dinâmicos e metalinguísticos, e tudo o que pode fazer é uma fala do usuário prevista no modelo de interação~\cite{barbosa2010}. A fronteira de informação da Fase~II é, portanto, a metamensagem do designer. O mesmo artefato tem três leituras: para a persona, é a conversa com o preposto do designer; para o agente, é o espaço de observação e de ação; para as pesquisadoras, é o esquema de eventos. O design falha quando essas leituras divergem sem declaração. Há uma simetria com o Mágico de Oz~\cite{preece2002}: lá um humano simula o sistema; aqui um modelo simula o usuário, e o protótipo só vale se estiver declarado o que é simulado, por quem e com acesso a quê.
+
+Cada decisão recebe status de evidência (\stEV, com fonte), princípio de design (\stPD) ou hipótese operacional (\stHO). As Seções~\ref{sec:modelo}--\ref{sec:ajuda} seguem os itens (a)--(h) do enunciado; as Seções~\ref{sec:prototipo}--\ref{sec:verif} cobrem interface e protótipo, acoplamento e verificação; os modelos completos estão no Apêndice.
+
+% =====================================================================
+\section{Do modelo ao design}\label{sec:modelo}
+
+\subsection{Retomada e reformulação}
+Projetar reformula o problema~\cite{lara2026a3}. A Tabela~\ref{tab:tucig} reapresenta a formulação $T \times U \times C \times I \times G$ da Fase~II e registra o que mudou ao projetar. O elenco não mudou: (1)~persona primária Lúcia, representada pelo agente com M1--M6 ligados; (2)~comparador, adultos de 30 a 50 anos sem experiência em configurar automação, representado pela mesma arquitetura com distribuições de usuário ``normal''; (3)~antiusuário, quem configura automações (como a filha), não representado.
+
+\begin{table}[!t]
+\caption{$T \times U \times C \times I \times G$: Fase II $\rightarrow$ design}
+\label{tab:tucig}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabularx}{\columnwidth}{@{}P{0.25cm}P{2.6cm}Y@{}}
+\toprule
+& \textbf{Fase II $\rightarrow$ design} & \textbf{Por quê} \\
+\midrule
+T & 7 telas $\rightarrow$ 9 telas, 3 diálogos (AL, CE1, CE2), ajuda em 3 camadas & Ação irreversível pedia alerta e desfazer; sair sem salvar pedia captura (Seç.~\ref{sec:molic}) \\
+U & Inalterado (faixas e distribuições da Fase II) & O design não justifica mudar a persona \\
+C & 4 tarefas; $A_{\min}$ de C1: 6/4 $\rightarrow$ 5/5 & Recontagem pelo CTT e KLM; C1 é de calibração. V1 e V2 intocadas \\
+I & 17 $\rightarrow$ 21 tipos de evento, mais 4 derivados & Diálogos, camada de ajuda, método escolhido e etiquetas MAC precisam de evento \\
+G & Inalterada (sem dados humanos compatíveis) & Curadoria não mudou \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Metas de design e especificação de usabilidade}
+Das metas de usabilidade de Preece \textit{et al.}~\cite[pp.~14--20]{preece2002}, as prioritárias são \textit{segurança} (não estragar o que a filha configurou), \textit{eficácia} (entender e desfazer), \textit{facilidade de aprender} (novata) e \textit{eficiência}. \textit{Facilidade de lembrar} fica fora: o protocolo tem uma sessão. As metas de experiência da persona (não levar susto, não se sentir incapaz, manter o controle) orientam o design (estado escrito, confirmação e desfazer, ajuda discreta), mas não são medidas pelo agente: autorrelato do agente não é medida humana. A Tabela~\ref{tab:especificacao} converte as metas prioritárias em especificação de usabilidade~\cite[cap.~9]{dix2004} com o dicionário de métricas da Fase~II; os níveis valem para pessoas do perfil na versão~B e são \stHO, pois não há medida atual.
+
+\begin{table}[!t]
+\caption{Especificação de usabilidade (perfil, versão B; níveis \stHO)}
+\label{tab:especificacao}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabularx}{\columnwidth}{@{}P{1.35cm}Y P{0.75cm}P{0.75cm}P{0.75cm}@{}}
+\toprule
+\textbf{Meta} & \textbf{Medida (Fase II)} & \textbf{Pior} & \textbf{Plan.} & \textbf{Melhor} \\
+\midrule
+Eficácia & $S$ por tarefa (verificador externo) & 0,60 & 0,80 & 1,00 \\
+Segurança & $R_{\mathrm{ACT}}$ (exclusão confirmada ou mudança não pedida, por oportunidade) & 0,10 & 0,02 & 0 \\
+Utilidade da explicação & $R_{\mathrm{ATR}}(A) - R_{\mathrm{ATR}}(B)$ em C1 & 0 & 0,15 & 0,30 \\
+Eficiência & $X = A/A_{\min}$ (KLM: $X=1$) & 2,0 & 1,5 & 1,0 \\
+Aprender & $U_{\mathrm{pre}}$: 1.º suporte antes do 1.º erro & 0,3 & 0,6 & 1,0 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Restrições}
+Design é alcançar metas sob restrições~\cite[cap.~5]{dix2004}. Do enunciado: quatro tarefas, duas de validação congeladas; métricas mínimas $S$, $R_k$, $A$ e $U$; sucesso verificado fora do agente; revisão ética (pessoas idosas, sem CEP até agora). \textit{Restrição do comparador.} Os dados humanos de comparação virão de um piloto próprio no mesmo CasaFácil; por construção, ficam fixados pelo comparador: os objetivos das tarefas; a informação disponível (telas, signos, texto da ajuda); as ações essenciais; os mecanismos de prevenção e recuperação (AL, RA, CE1, CE2 e a PA do horário); e o tamanho e a vizinhança dos alvos, que determinam E-SLP. Ficam livres a aparência visual que não altere alvos nem textos (cores, tipografia, ícones das abas) e a ordem de apresentação dos tópicos da ajuda. A interface do estudo de Tsuchiya \textit{et al.}~\cite{tsuchiya2018}, usada só para conferir o nível de $S$, não é conhecida em detalhe; essa comparação é limitação declarada.
+
+% =====================================================================
+\section{Metamensagem, espaço de design e modelo conceitual}\label{sec:meta}
+
+\subsection{Metamensagem}
+No modelo de metamensagem de de Souza, conforme Barbosa e Silva~\cite[p.~77]{barbosa2010}:
+\begin{quote}\footnotesize
+\textit{Este é o meu entendimento, como designer, de quem você é:} uma pessoa de 60 anos ou mais que usa o celular todos os dias para conversar e fazer chamadas de vídeo, mas que não criou as automações da casa, lê com atenção em português, prefere resolver sozinha e tem receio de apagar algo por engano; \textit{do que quer ou precisa fazer:} entender por que um aparelho mudou sem que você tocasse nele e desfazer ou impedir a mudança sem estragar o que foi programado; \textit{de como prefere fazê-lo e por quê:} pelo celular, com poucos toques e sem digitar, conferindo cada resultado e recorrendo à Ajuda quando não reconhece um símbolo, para continuar no controle da própria casa. \textit{Este, portanto, é o sistema que projetei para você, e esta é a forma como pode ou deve utilizá-lo:} no Início você vê seus aparelhos, cada um com o estado escrito, e um aviso quando algo muda sozinho; no Histórico vê quem fez cada mudança e, na versão~B, pode perguntar ``Por quê?'' no próprio aviso; em Rotinas pode pausar, editar ou excluir as regras automáticas, e nenhuma exclusão acontece sem sua confirmação, podendo ainda ser desfeita; a Ajuda explica cada símbolo e cada passo, mas só aparece quando você pede.
+\end{quote}
+Os ícones sem texto e o rótulo em inglês ``Smart Schedule'' contrariam a metamensagem, mas são mantidos de propósito, por reproduzirem aplicativos comerciais~\cite[pp.~34--35]{tsuchiya2018} e exercitarem L2; a metamensagem compensa com a promessa de ajuda (decisão D12, Apêndice).
+
+\subsection{Espaço de design com dois receptores}
+A Tabela~\ref{tab:jak} aplica os elementos de Jakobson adotados pela engenharia semiótica~\cite{barbosa2010}; é nela que se decide a equivalência de canal. A versão integral, com as perguntas do designer, está no caderno de design.
+
+\begin{table*}[!t]
+\caption{Espaço de design com dois receptores}
+\label{tab:jak}
+\centering
+\input{partes/jakobson}
+\end{table*}
+
+\subsection{Modelo conceitual}
+\textit{O que o sistema faz:} mostra o estado de quatro aparelhos da casa, registra quem mudou cada um e guarda regras automáticas (rotinas) criadas por outra pessoa, que a moradora pode suspender, alterar ou apagar. \textit{Como se comporta:} toda mudança aparece na hora, escrita; nada destrutivo acontece sem confirmação; o que foi feito pode ser desfeito; as rotinas agem sozinhas no horário ou na condição que têm. \textit{Com que se parece:} um painel de interruptores, um diário de mudanças e um fichário de regras ``se\dots então''. O estilo de interação é manipulação direta por toque e navegação por abas, sem digitação nem conversa; a perspectiva comunicativa não obriga a interface conversacional~\cite[p.~230]{barbosa2010}. A Tabela~\ref{tab:tipos} indica o tipo de interação predominante por tarefa~\cite[cap.~2]{preece2002}.
+
+\begin{table}[!t]
+\caption{Tipo de interação predominante e metáfora por tarefa}
+\label{tab:tipos}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\columnwidth}{@{}P{0.55cm}P{2.6cm}Y@{}}
+\toprule
+\textbf{Tarefa} & \textbf{Tipo predominante} & \textbf{Metáfora em jogo} \\
+\midrule
+C1 & Explorar (achar a causa) e manipular (religar) & Diário de mudanças; interruptor \\
+C2 & Navegar e instruir (suspender a regra) & Fichário de regras; pausa \\
+V1 & Explorar, navegar e instruir & Diário; fichário; pausa \\
+V2 & Explorar, navegar e manipular (ajustar o horário) & Diário; fichário; relógio com $+/-$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textit{Metáforas e limites}~\cite[cap.~9]{benyon2010}, \cite{barbosa2010}. O \textit{interruptor} sugere que só a pessoa muda o aparelho; a metáfora quebra exatamente quando uma rotina age, e essa quebra é o problema do estudo, compensado pelo aviso e pelo Histórico. A \textit{rotina} lembra um hábito diário, e não uma regra que age sozinha; por isso a Ajuda~H1 a define como ``regra que o aplicativo segue sozinho''. O \textit{diário} não mostra intenções, só autores; a versão~B acrescenta o motivo. A \textit{pausa} de mídia (duas barras) é convenção que a persona pode não conhecer (L2). \textit{Conceitual e físico}~\cite[p.~199]{benyon2010}: o design conceitual é o que está acima, com os objetos aparelho, rotina e registro de mudança e as operações ver, desfazer, suspender, alterar e apagar; o design físico (Seção~\ref{sec:prototipo}) decide telas, rótulos, ícones e posições.
+
+% =====================================================================
+\section{Mapa de objetivos e cenários de interação}\label{sec:cenarios}
+
+\subsection{Mapa de objetivos}
+A Tabela~\ref{tab:objetivos} classifica os objetivos~\cite{barbosa2010} da moradora (único papel) sobre as entidades aparelho, rotina e registro. O mapa diz o que a persona quer, nunca como fará.
+
+\begin{table}[!t]
+\caption{Mapa de objetivos (papel: moradora)}
+\label{tab:objetivos}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabularx}{\columnwidth}{@{}P{0.45cm}YP{1.05cm}P{0.9cm}@{}}
+\toprule
+\textbf{Id} & \textbf{Objetivo} & \textbf{Tipo} & \textbf{Entidade} \\
+\midrule
+F1 & Saber por que um aparelho mudou sem que ela tocasse & Final & registro \\
+F2 & Pôr o aparelho no estado que ela quer & Final & aparelho \\
+F3 & Impedir que uma regra aja num período sem perdê-la & Final & rotina \\
+F4 & Mudar quando uma regra age & Final & rotina \\
+I1 & Ver quem fez cada mudança & Instr. direto (F1) & registro \\
+I2 & Encontrar a regra que afeta um aparelho & Instr. direto (F3, F4) & rotina \\
+I3 & Entender um símbolo ou termo da tela & Instr. indireto & signo \\
+I4 & Voltar atrás de um engano & Instr. indireto & todas \\
+I5 & Avisar que terminou ou que desistiu & Instr. (protocolo) & tarefa \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Cenários de interação}
+Escritos sem widgets nem rótulos~\cite{barbosa2010}, \cite[cap.~3]{benyon2010}, um por cenário de problema da Fase~II.
+
+\textit{CI1, para CN1 (tarefa crítica), alternativa $\alpha$: explicação sob demanda.} Às 14h02 Lúcia, lendo na sala, nota que a luz apagou. Abre o aplicativo e vê, acima dos aparelhos, o aviso de que a luz da sala foi desligada às 14h02. Pede ao aplicativo o motivo; ele responde que a regra de economia de energia, criada pela filha, apaga a luz da sala às 14h quando há sol. Ela pede para desfazer, vê a luz como ligada, avisa que terminou e diz que foi a regra.
+
+\textit{CI1, alternativa $\beta$: explicação sempre presente.} O próprio aviso já diz que a regra de economia de energia apagou a luz; Lúcia lê, desfaz e conclui, sem precisar pedir o motivo.
+
+\textit{CI1, versão A.} Sem motivo no aviso, Lúcia procura o registro de mudanças; a linha das 14h02 diz que a mudança veio da regra de economia de energia. Ela volta, religa a luz e conclui.
+
+\textit{Perguntas que surgiram e que a análise não levantara.} (1)~O aviso deveria indicar a origem também em A? Não: A é a condição de controle; visibilidade da iniciativa não é explicação (D13). (2)~A explicação deve sumir depois de desfazer? Não: a pessoa confere o resultado. (3)~Desfazer deve depender de abrir a explicação? Não, para que $A_{\min}$ seja igual em A e B. (4)~Em $\beta$, a leitura seria observável? Não, e o uso de suporte ficaria indefinido em B; isso decidiu por $\alpha$ (D4, Seção~\ref{sec:klm}). (5)~A pergunta final sobre a causa deve aceitar ``não sei''? Sim, para não forçar palpites.
+
+\textit{CI2, para CN2.} Na véspera da viagem, Lúcia procura no aplicativo as regras automáticas, reconhece a que liga a cafeteira às 7h, pede que ela fique suspensa e vê que a regra continua guardada, apenas parada. Se pedir para apagá-la, o aplicativo pergunta se tem certeza e, depois, ainda oferece voltar atrás.
+
+\textit{CI3, para CN3 (validação).} A tomada do ventilador desliga de novo; Lúcia pergunta ao aplicativo o motivo, descobre a regra de horário de pico, vai até ela, suspende-a e conclui indicando a regra como causa.
+
+\textit{CI4, para CN4 (validação).} Lúcia descobre que a regra de climatização ligou o ar às 15h, abre a regra, adianta o horário de hora em hora até as 21h, confere o valor, grava e conclui indicando a regra.
+
+CI3 e CI4 só verificam que o design permite realizar V1 e V2; não serviram para escolher entre alternativas. A Tabela~\ref{tab:encadeamento} encadeia cenários, tarefas e objetivos.
+
+\begin{table}[!t]
+\caption{Encadeamento: cenário de problema $\rightarrow$ cenário de interação $\rightarrow$ tarefa $\rightarrow$ objetivo}
+\label{tab:encadeamento}
+\centering
+\scriptsize
+\begin{tabularx}{\columnwidth}{@{}YYP{1.4cm}P{1.3cm}@{}}
+\toprule
+\textbf{Problema} & \textbf{Interação} & \textbf{Tarefa} & \textbf{Objetivos} \\
+\midrule
+CN1 A luz apagou & CI1 ($\alpha$ adotada) & C1 (cal.) & F1, F2 \\
+CN2 A viagem & CI2 & C2 (cal.) & F3 \\
+CN3 O ventilador parou & CI3 & V1 (val.) & F1, F3 \\
+CN4 O ar ligou cedo & CI4 & V2 (val.) & F1, F4 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{Esquema conceitual de signos}\label{sec:signos}
+
+Os signos são definidos por conteúdo e expressão~\cite{barbosa2010}; o esquema não é o modelo de dados. As Tabelas~\ref{tab:signos1} e~\ref{tab:signos2} preenchem o esquema estendido para os 26 signos usados nas tarefas, com as colunas \textit{Na observação do agente} (regra de equivalência de canal) e \textit{Evento}. A tradução da tela para a observação $o_t$ segue sete regras: (1)~texto literal entre aspas, inclusive em inglês; (2)~ícones descritos pela forma (``ícone de duas barras verticais, sem texto''), nunca pela função; (3)~só a tela atual, sem estado JSON, nomes de variáveis, origem não exibida ou elementos ocultos; (4)~signo dinâmico alterado aparece como ``Mudou na tela: <signo>: <antes> $\rightarrow$ <depois>''; (5)~signos metalinguísticos (ajuda, dica, painel) só após a ação de abri-los; (6)~ações numeradas na ordem visual, com verbo genérico; (7)~nunca HTA, CTT, GOMS, $A_{\min}$, critérios de sucesso ou dados de validação. O CasaFácil não tem botões desabilitados (D2): escrever ``desabilitado'' vazaria estado, e omiti-los diria ao agente que não funcionam. Os signos de aplicação (rotina, situação, Smart Schedule, ícones, ``Por quê?'') têm explicação completa na ajuda~\cite{barbosa2010}.
+
+\begin{table*}[!t]
+\caption{Esquema conceitual de signos estendido --- S1, S5, S7, S8 e barras. Origem: dom(ínio), transf(ormado), aplic(ação), conv(encional); tipo: E(stático), D(inâmico), M(etalinguístico)}
+\label{tab:signos1}
+\centering
+\input{partes/signos1}
+\end{table*}
+
+\begin{table*}[!t]
+\caption{Esquema conceitual de signos estendido --- S2, S3, S4, ajuda e diálogos}
+\label{tab:signos2}
+\centering
+\input{partes/signos2}
+\end{table*}
+
+% =====================================================================
+\section{Modelos de tarefa: da HTA ao CTT e ao GOMS}\label{sec:tarefas}
+
+\subsection{CTT}
+O CTT~\cite{barbosa2010}, \cite[seç.~18.3]{dix2004} reescreve a HTA das quatro tarefas (Fig.~\ref{fig:ctt-c1} e Tabela~\ref{tab:ctt}, Apêndice) com tarefas abstratas [A], do usuário [U] (as operações não observáveis da Fase~II), interativas [I] (geram eventos de interação) e do sistema [S] (geram eventos do sistema). Em C1, a identificação da causa e o acender da luz são independentes de ordem (\ordind) e habilitam a conclusão com passagem de informação (\enabinfo); as escolhas Histórico/painel e interruptor/Desfazer são \choice. As convenções comuns são:
+\begin{equation*}
+T = (\mathit{Núcleo}\ \susp\ \mathit{ConsultarAjuda})\ \deact\ \mathit{Encerrar},
+\end{equation*}
+com a ajuda como suspensão e retomada e a desistência ou o limite de $3A_{\min}$ ações como desativação. Em V1 e V2 o CTT reescreve a HTA congelada sem alterar objetivos, operações ou critérios; três divergências (ordem livre que admite intercalação em C1; \enabinfo{} onde a HTA diz ``sequência''; ajuda global, e não opcional dentro de um subobjetivo) foram registradas, não corrigidas. O CTT não representa erros, tratados na Seção~\ref{sec:molic}.
+
+\subsection{CMN-GOMS de C2}
+Na notação de Card, Moran e Newell~\cite{barbosa2010}, \cite[cap.~12]{dix2004}:
+\begin{quote}\scriptsize\ttfamily
+GOAL: IMPEDIR-QUE-A-CAFETEIRA-LIGUE\\
+.\ GOAL: ABRIR-LISTA-DE-ROTINAS: TOCAR Rotinas\\
+.\ GOAL: ABRIR-ROTINA: LOCALIZAR "Bom dia"; TOCAR\\
+.\ GOAL: SUSPENDER-A-AÇÃO\\
+.\ .\ [select METHOD: PAUSAR-ROTINA\\
+.\ .\ .\ \ TOCAR ícone de duas barras; VERIFICAR "Pausada"\\
+.\ .\ \ \ METHOD: EDITAR-E-DESMARCAR\\
+.\ .\ .\ \ TOCAR lápis; TOCAR caixa "Cafeteira";\\
+.\ .\ .\ \ TOCAR "Salvar"; VERIFICAR regra]\\
+.\ GOAL: ENCERRAR: TOCAR Concluir; TOCAR Confirmar
+\end{quote}
+Regras de seleção: R1, se outros aparelhos da rotina devem continuar agindo, EDITAR-E-DESMARCAR; R2, senão, PAUSAR-ROTINA. A escolha é observável (\ev{state\_changed} de situação ou de aparelhos) e vira o evento derivado \ev{method\_selected}, indicador e não métrica de sucesso. Regras análogas em C1 geram \ev{method\_selected} \{histórico, painel\} e \{interruptor, desfazer\}.
+
+\subsection{KLM e alternativas da cena principal}\label{sec:klm}
+Tabela única de tempos~\cite{card1980}, \cite[cap.~12]{dix2004}: P = 1,10~s, K = 0,28~s, M = 1,35~s; sem H (uma mão) e R = 0 (a latência do LLM é desempenho do sistema). Um toque é P + K = 1,38~s, adaptação ao toque que é \stHO. O operador M segue as mesmas regras em todas as alternativas~\cite[pp.~448--456]{preece2002}: uma M antes do primeiro toque após tela ou painel novo; uma M antes do toque que inicia subobjetivo da HTA; toques repetidos no mesmo botão formam bloco com uma M antes e uma ao final; nenhuma M entre escolher a opção e Confirmar.
+
+A cena principal é o diagnóstico da causa em C1, versão~B. A Tabela~\ref{tab:klm-alt} compara B1 (explicação sob demanda, cenário $\alpha$) e B2 (sempre exibida, $\beta$); a linha de base de todas as tarefas está na Tabela~\ref{tab:klm} (Apêndice).
+
+\begin{table}[!t]
+\caption{KLM das alternativas da cena principal (C1, versão B)}
+\label{tab:klm-alt}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabularx}{\columnwidth}{@{}P{1.2cm}YP{0.35cm}P{0.35cm}P{0.65cm}@{}}
+\toprule
+\textbf{Altern.} & \textbf{Sequência (T = toque)} & \textbf{$n_M$} & \textbf{T} & \textbf{s} \\
+\midrule
+B1 (adotada) & M T(Por quê?) M T(Desfazer) M T(Concluir) M T(causa) T(Confirmar) & 4 & 5 & 12,30 \\
+B2 & M T(Desfazer) M T(Concluir) M T(causa) T(Confirmar) & 3 & 4 & 9,57 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\textit{Decisão D4.} B2 é 2,73~s e um toque mais rápida para o especialista, mas B1 é adotada porque (a)~a pergunta do estudo é sobre explicação sob demanda; (b)~em B1 a leitura é observável (\ev{support\_open(por\_que)}), e em B2 seria operação não observável, deixando $U$ indefinido em B; (c)~B2 adensa uma tela já densa, com mais alvos perto dos interruptores (risco de E-SLP, \stHO). O KLM quantifica o custo aceito; não decide sozinho. B1 carrega a hipótese H-B1: na versão~B, $R_{\mathrm{ATR}}$ é menor que em A, no perfil.
+
+\subsection{Escopo do GOMS e fronteira}
+O GOMS descreve especialistas sem erros em tarefas rotineiras~\cite{barbosa2010}, \cite{preece2002}. Aqui serve para comparar alternativas, definir o método de referência e o denominador $A_{\min}$ de $X$, detectar inconsistências (pausar em C2 e em V1 usa o mesmo método) e gerar a ajuda procedimental (H6, H7). Não é modelo da persona: tempos do KLM como tempo de uma novata seriam hipótese sem sustentação, e o UXAgent não simula tempo. HTA, CTT, métodos, regras de seleção e $A_{\min}$ são modelos do analista e nunca chegam ao agente.
+
+% =====================================================================
+\section{MoLIC, rupturas e comunicabilidade}\label{sec:molic}
+
+\subsection{Diagrama e leituras}
+A MoLIC do único papel de usuário~\cite{barbosa2003molic}, \cite{barbosa2010} está nas Figs.~\ref{fig:molic-a} e~\ref{fig:molic-b} (Apêndice), com cenas, falas de transição, processos do sistema, acesso ubíquo (barras superior e inferior, inclusive Ajuda), falas de recuperação tracejadas e cenas de alerta (AL) e de captura (CE1, CE2) com borda dupla. O vocabulário é controlado (verbo + objeto): ``pausar rotina'' em C2 e em V1 é a mesma fala, o que confirma a consistência entre conversas semelhantes. A Tabela~\ref{tab:leituras} dá as três leituras de cada elemento.
+
+\begin{table*}[!t]
+\caption{Leituras de cada elemento da MoLIC ($^*$ só sintético)}
+\label{tab:leituras}
+\centering
+\input{partes/leituras}
+\end{table*}
+
+\subsection{Máquina de estados}
+A MoLIC é ferramenta epistêmica e não modelo formal~\cite{barbosa2010}; a Tabela~\ref{tab:estados} (Apêndice) a traduz numa rede de transição de estados~\cite[cap.~16]{dix2004} implementada no módulo \texttt{casafacil.py}. As falas u: de um estado são exatamente as ações oferecidas ao executor e o conteúdo da observação seguinte; a conclusão de um objetivo é condição do estado avaliada pelo verificador externo; a ajuda é subdiálogo que empilha a cena de origem e devolve a persona a ela.
+
+\subsection{Rupturas}
+Para cada erro previsto nas HTAs escolheu-se PP, PA, AL, RA ou CE~\cite{barbosa2010}, verificando as regras ``toda PP tem RA'' e ``toda PA sobre signo de operação vem com PP''. A Tabela~\ref{tab:rup} resume; a matriz completa, com 14 linhas, está no caderno de design. \textit{O mecanismo muda a métrica:} com PA o erro não ocorre (passar de 23h para 0h); com PP e RA ele ocorre e é registrado; com AL a exclusão só conta como E-ACT quando confirmada, e abrir o alerta e cancelar é \ev{dialog\_choice(cancelar)}, etiquetado ``Epa!''. Concluir sem o estado-alvo (E-OMI) não tem PA nem CE: o sistema não conhece o objetivo da tarefa, e avisar entregaria o critério de sucesso. Como pessoas e agente usam o mesmo CasaFácil, as taxas de erro medem a mesma coisa (restrição do comparador).
+
+\begin{table}[!t]
+\caption{Rupturas: resumo da matriz (op. da HTA, mecanismo, métrica)}
+\label{tab:rup}
+\centering
+\scriptsize
+\setlength{\tabcolsep}{2.5pt}
+\begin{tabularx}{\columnwidth}{@{}P{1.6cm}P{1.15cm}YP{0.75cm}@{}}
+\toprule
+\textbf{Operação} & \textbf{Erro} & \textbf{Mecanismo e evento} & \textbf{Métr.} \\
+\midrule
+C1.1.4 causa & E-ATR & PP origem em S5 e painel [B]; RA Voltar em S7; \ev{cause\_selected} & $R_{\mathrm{ATR}}$ \\
+C1.2.3 interruptor & E-SLP & PP estado escrito; RA tocar de novo; \ev{state\_changed} & $R_{\mathrm{SLP}}$ \\
+C2.2.1 excluir & E-ACT & PP texto vermelho afastado; AL; RA faixa Desfazer; \ev{dialog\_shown} & $R_{\mathrm{ACT}}$ \\
+C2.2.4 salvar & E-OMI & PP botão Salvar; CE1 ao cancelar; \ev{dialog\_choice} & $R_{\mathrm{OMI}}$ \\
+C1.3.3 confirmar & sem resposta & CE2; PP nada pré-marcado & --- \\
+V2.3.1 horário & 23h$\rightarrow$0h & PA preso em 00h--23h; PP nota; RA ``$-$'' & --- \\
+Concluir & E-OMI & PP instrução; RA Voltar; sem PA/CE & $S$, $R_{\mathrm{OMI}}$ \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Comunicabilidade operacionalizada}
+Oito das treze etiquetas do MAC~\cite{prates2000}, \cite{barbosa2010} são definidas como padrões de eventos (Tabela~\ref{tab:mac}); o verificador grava cada ocorrência como \ev{communicability\_tagged}. Nada é inferido do texto da justificativa do LLM. Cada definição é \stHO: o padrão no registro do agente não equivale à experiência de ruptura de uma pessoa; a mesma definição será aplicada aos registros humanos.
+
+\begin{table*}[!t]
+\caption{Etiquetas do MAC como padrões de eventos}
+\label{tab:mac}
+\centering
+\input{partes/mac}
+\end{table*}
+
+% =====================================================================
+\section{Sistema de ajuda}\label{sec:ajuda}
+
+A ajuda é a metacomunicação explícita do designer~\cite{barbosa2010}, \cite{silveira2002} e, aqui, variável de protocolo.
+
+\textit{Conteúdo a partir das dúvidas.} Dez tópicos (Tabela~\ref{tab:ajuda}, Apêndice, com o texto exibido) cobrem as dúvidas informativa e motivacional (H1, H10: o que é uma rotina; Concluir e Desistir), descritiva e interpretativa (H2--H4: os dois ícones e ``Smart Schedule''), investigativa e histórica (H5: quem mudou um aparelho), procedimental (H6, H9: suspender; desfazer), de escolha (H7: pausar, editar ou excluir) e navegacional (H8: onde ficam as rotinas). Cada resposta sai de um modelo do analista: esquema de signos (H1--H4), MoLIC (H5, H8), CMN-GOMS (H6, H7) e matriz de rupturas (H7, H9). As respostas são genéricas: nenhuma cita aparelho, rotina ou horário de uma tarefa (D9). A dúvida sugestiva não tem tópico, pois H1, H7 e H8 cobrem as poucas funções; a ausência é decisão.
+
+\textit{Acesso e camadas.} (1)~Dica local ``?'' em S3 e S4, as telas com signos de aplicação sem texto, num balão sobre a própria cena; (2)~Ajuda (S6), aba da barra inferior em todas as cenas, com retorno à cena de origem; (3)~painel ``Por quê?'' (S8, só B), condição experimental registrada como suporte (\texttt{por\_que}) para que $U$ seja comparável entre versões. Os pontos de acesso estão marcados nos esboços da Fig.~\ref{fig:wire}.
+
+\textit{Requisitos de Dix}~\cite[cap.~11]{dix2004}. Disponibilidade: Ajuda em todas as cenas. Precisão e completude: cada signo de aplicação das Tabelas~\ref{tab:signos1}--\ref{tab:signos2} tem tópico, conferido por lista. Consistência: mesmo vocabulário da tela; o ícone é chamado pela forma. Robustez: abrir a ajuda nunca muda aparelhos nem rotinas. Flexibilidade: duas profundidades; não há busca textual porque o protocolo não tem digitação (ausência justificada). Discrição: a ajuda nunca abre sozinha.
+
+\textit{Registro.} Cada acesso gera \ev{support\_open} com camada, tópico, cena de origem e passo, e \ev{support\_close} com a cena de retorno. Uso de suporte por camada: $U_\ell = N(\ev{support\_open}, \ell)/N_{\mathrm{tarefas\ iniciadas}}$; $U = \sum_\ell U_\ell$, com o caderno da persona (só sintético) relatado à parte; abrir tópicos dentro de S6 não conta nova consulta.
+
+\textit{Igualdade e congelamento.} O texto é o mesmo para pessoas e agente, versionado por \textit{hash}, e só chega ao agente quando solicitado (\textit{PedirAjuda})~\cite{lara2026p3}. A ajuda não é adaptativa. A ajuda permitida é a mesma na calibração e na validação; na calibração, nenhum conteúdo foi ajustado pelo desempenho do agente. \textit{Agente de ajuda não é UX-Agent:} o CasaFácil não tem assistente; se tivesse, faria parte do sistema e as lições do Clippy sobre intrusão e controle valeriam para ele~\cite{dix2004}, \cite{preece2002}. O UXAgent está do outro lado e representa a persona.
+
+% =====================================================================
+\section{Interface e protótipo}\label{sec:prototipo}
+
+A Fig.~\ref{fig:wire} mostra os esboços das telas centrais: S1 nas versões A, B1 e B2 (as duas alternativas da cena principal) e S3. O inventário completo das nove telas e dos diálogos, na ordem visual que é também a ordem de $o_t$, está na Tabela~\ref{tab:telas} (Apêndice). Decisões de design físico: interruptor acompanhado do estado escrito (D14), para não depender de cor e posição; Concluir e Desistir numa barra fixa (D11), porque o protocolo permite encerrar a qualquer momento e o E-OMI precisa ser possível; ``Excluir rotina'' em texto vermelho, afastado dos ícones adjacentes de pausar e editar (D5).
+
+\begin{figure*}[!t]
+\centering
+\begin{tikzpicture}[x=1cm,y=1cm]
+\celular{(0,0)}{S1 Início -- versão A}{
+  \draw[fill=gray!12] (0.15,5.0) rectangle (3.15,5.55);
+  \node[font=\tiny, align=left, anchor=west] at (0.2,5.27) {Luz da sala: desligada às 14h02};
+  \node[font=\tiny\bfseries, anchor=west] at (0.2,4.7) {Sala e quarto};
+  \aparelho{4.25}{Luz da sala}{Desligada}
+  \aparelho{3.6}{Ar-condicionado do quarto}{Desligada}
+  \aparelho{2.95}{Cafeteira}{Desligada}
+  \aparelhoL{2.3}{Tomada do ventilador}
+  \node[font=\tiny, gray, align=center] at (1.65,1.3) {origem só no\\Histórico (aba)};}
+\celular{(3.8,0)}{S1 -- versão B1 (adotada)}{
+  \draw[fill=gray!12] (0.15,4.85) rectangle (3.15,5.55);
+  \node[font=\tiny, anchor=west] at (0.2,5.38) {Luz da sala: desligada às 14h02};
+  \draw (0.3,4.92) rectangle (1.35,5.15); \node[font=\tiny] at (0.83,5.03) {Por quê?};
+  \draw (1.55,4.92) rectangle (2.6,5.15); \node[font=\tiny] at (2.08,5.03) {Desfazer};
+  \node[font=\tiny\bfseries, anchor=west] at (0.2,4.55) {Sala e quarto};
+  \aparelho{4.1}{Luz da sala}{Desligada}
+  \aparelho{3.45}{Ar-condicionado do quarto}{Desligada}
+  \aparelho{2.8}{Cafeteira}{Desligada}
+  \aparelhoL{2.15}{Tomada do ventilador}
+  \node[font=\tiny, gray, align=center] at (1.65,1.2) {causa só no painel S8,\\após ``Por quê?''};}
+\celular{(7.6,0)}{S1 -- versão B2 (rejeitada)}{
+  \draw[fill=gray!12] (0.15,4.55) rectangle (3.15,5.55);
+  \node[font=\tiny, align=left, anchor=west] at (0.2,5.15) {Luz da sala: desligada às 14h02\\pela rotina Economia de energia,\\porque há sol na sala};
+  \draw (0.3,4.62) rectangle (1.35,4.85); \node[font=\tiny] at (0.83,4.73) {Desfazer};
+  \node[font=\tiny\bfseries, anchor=west] at (0.2,4.25) {Sala e quarto};
+  \aparelho{3.8}{Luz da sala}{Desligada}
+  \aparelho{3.15}{Ar-condicionado do quarto}{Desligada}
+  \aparelho{2.5}{Cafeteira}{Desligada}
+  \aparelhoL{1.85}{Tomada do ventilador}
+  \node[font=\tiny, gray, align=center] at (1.65,1.05) {leitura não observável;\\tela mais densa};}
+\celular{(11.4,0)}{S3 Detalhe da rotina}{
+  \node[font=\tiny, anchor=west] at (0.2,5.45) {< Voltar};
+  \node[font=\scriptsize\bfseries, anchor=west] at (0.2,5.1) {Bom dia};
+  \node[font=\tiny, anchor=west, gray] at (0.2,4.85) {Ativa};
+  \node[font=\tiny, align=left, anchor=west] at (0.2,4.4) {Se for 07h00, então ligar\\Cafeteira e Luz da sala};
+  \draw (0.3,3.55) rectangle (0.8,3.95); \draw[line width=1.2pt] (0.48,3.63)--(0.48,3.87) (0.62,3.63)--(0.62,3.87);
+  \draw (0.9,3.55) rectangle (1.4,3.95); \draw[thick] (1.0,3.62)--(1.3,3.9);
+  \draw (2.65,3.55) rectangle (3.05,3.95); \node[font=\tiny] at (2.85,3.75) {?};
+  \node[font=\tiny, red!70!black] at (1.65,2.6) {Excluir rotina};
+  \node[font=\tiny, gray, align=center] at (1.65,1.4) {ícones sem texto (L2);\\``?'': dica local (S9)};}
+\end{tikzpicture}
+\caption{Esboços (interface abstrata) de S1 nas versões A, B1 e B2 e de S3. As abas ``Ajuda'' (todas as telas) e ``?'' (S3, S4) são os pontos de acesso à ajuda. B1 e B2 são as alternativas da cena principal (Tabela~\ref{tab:klm-alt}).}
+\label{fig:wire}
+\end{figure*}
+
+\textit{Protótipo instrumentado.} A interface concreta é a máquina de estados da Tabela~\ref{tab:estados}, implementada em Python (\texttt{casafacil.py}, \texttt{ui\_version = casafacil-1.0}) com estado em JSON, relógio simulado, rotinas reativas e todos os diálogos. A renderização visual para pessoas, sobre a mesma máquina de estados e com os mesmos textos, será construída antes do piloto humano, que depende do CEP; até lá, os esboços acima são a especificação da tela.
+
+% =====================================================================
+\section{Acoplamento agente--interface}\label{sec:acoplamento}
+
+O agente segue $a_t \sim \pi_\theta(\cdot \mid o'_t, x_t, \tau)$ e $x_{t+1} = F_\theta(x_t, o_t, a_t)$~\cite{lacerda2026faseII}. A cada passo: (1)~a interface expõe os elementos da tela atual; (2)~o controlador aplica M1 (crença sobre a causa), M2 (ícone não reconhecido vira ``[ícone sem nome]'' e sai da lista) e M5 (notas do caderno) e o tradutor monta $o'_t$; (3)~o LLM recebe só a instrução fixa de formato, a ficha da persona, a instrução literal da tarefa, $o'_t$ e, de $x_t$, a crença, as notas e as últimas oito ações que a persona executou na tarefa, pelo texto visível (memória de trabalho, \stHO), sem histórico de conversa; (4)~a resposta é JSON por saída estruturada, com o campo \texttt{acao} restrito a um \texttt{enum} com os números das falas u: daquele estado; uma resposta inválida gera nova solicitação e depois \texttt{F-FMT}; (5)~o executor aplica M4 (hesitação diante de ação destrutiva) e M3 (deslize para o vizinho de leiaute) e executa; (6)~o registrador grava os eventos. Os parâmetros $\theta$ de M1--M6 são sorteados por sessão a partir de um YAML versionado, com semente. A justificativa do LLM é traço qualitativo, nunca métrica. Exemplo de $o_t$ em S3 (C2, versão~A):
+
+\begin{quote}\scriptsize\ttfamily
+Tela: "Bom dia"\quad Situação: "Ativa"\\
+Regra: "Se for 07h00, então ligar Cafeteira e Luz da sala"\\
+Ações disponíveis: [1] tocar "Concluir" [2] tocar "Desistir" [3] tocar "Voltar" [4] tocar botão com ícone de duas barras verticais, sem texto [5] tocar botão com ícone de lápis, sem texto [6] tocar "?" [7] tocar "Excluir rotina" [8]--[11] abas
+\end{quote}
+
+\textit{Diferenças residuais} (\stHO): o agente recebe o texto inteiro da tela a cada passo, e a pessoa pode não ler tudo; a forma descrita de um ícone não é a percepção visual; o LLM pode trazer convenções de aplicativos do pré-treinamento (compensado em parte por M2); o caderno é físico para pessoas e mecanismo registrado no agente.
+
+% =====================================================================
+\section{Verificação e congelamento}\label{sec:verif}
+
+\textit{Inspeção de vazamento.} Um teste automático percorre todas as telas de C1 e C2 nas versões A e B e reprova qualquer observação que contenha identificadores internos (nomes de variáveis, de telas ou de rotinas internas), ``HTA'', ``CTT'', ``GOMS'' ou $A_{\min}$; outro confere que ícones aparecem pela forma, e não pela função, e que a origem de uma mudança só aparece no Histórico em A. Testes de importação garantem que o tradutor e a política do LLM não importam os modelos do analista. \textit{Lista de verificação da ajuda:} cada signo de aplicação tem tópico. \textit{Inspeção semiótica:} não realizada (opcional).
+
+\textit{Piloto de instrumentação.} Sessenta sessões sem LLM, só com C1 e C2, versões A e B, perfil e comparador: o executor por regras (só M3 ativo) e uma política aleatória (M1--M6 ativos). Ele verifica o design, não é resultado. Dezoito dos 21 tipos de evento do registro apareceram; os diálogos (AL, CE) e as falhas técnicas não ocorreram e são cobertos por testes. O executor por regras concluiu todas as tarefas ($S = 1$, com $X$ entre 1,00 e 1,06 por causa dos deslizes de M3 e de sua correção), o que confirma que o verificador decide o sucesso só pelo estado final; a política aleatória não concluiu nenhuma ($S = 0$), o que confirma que o verificador não aceita o encerramento declarado. V1 e V2 foram executadas uma única vez pelo executor por regras, sem LLM e sem mecanismos de persona, apenas para conferir que o design permite realizá-las; nada foi ajustado a partir disso, e esses registros não integram nenhum pacote de dados.
+
+\textit{Congelado} antes da calibração com o LLM (Tabela~\ref{tab:congela}). Toda alteração de rótulo, fluxo, ajuda, observação ou prompt depois do início da calibração gera nova versão e recomeça a calibração.
+
+\begin{table}[!t]
+\caption{Versões e \textit{hashes} congelados}
+\label{tab:congela}
+\centering
+\scriptsize
+\begin{tabularx}{\columnwidth}{@{}P{2.4cm}Y@{}}
+\toprule
+\textbf{Item} & \textbf{Valor} \\
+\midrule
+Interface & \texttt{casafacil-1.0} \\
+Caderno de design & \texttt{e1-2026-11-22} \\
+Texto da ajuda (\textit{hash}) & \texttt{6021a1bf64ae} \\
+Mecanismos M1--M6 & \texttt{mech-1.0} \\
+Config. perfil / comparador & \texttt{8f32e6a7ef7b} / \texttt{f6833303b58c} \\
+Config. genérico / neutro & \texttt{723a1102c3e6} / \texttt{b055335180ff} \\
+Modelo & \texttt{claude-sonnet-5-5}, \textit{effort} baixo \\
+V1, V2 (instrução, estado, critério) & congeladas em 26/10/2026 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% =====================================================================
+\section{Considerações finais}
+
+O design responde à pergunta desta fase com três decisões que se reforçam: a observação do agente contém só os signos que a persona vê (equivalência de canal), suas ações são exatamente as falas u: da MoLIC em cada estado, e todo acesso a explicação ou ajuda é uma ação registrada. A decisão B1 sacrifica eficiência de especialista para tornar a explicação observável, e é a hipótese H-B1 que a calibração e, depois, a validação vão testar. Divergências em relação à Fase~II (\,$A_{\min}$ de C1, proteção da exclusão, conteúdo da observação) estão declaradas, e nenhuma atinge V1 ou V2. A próxima etapa gera os dados sintéticos.
+
+\bibliographystyle{IEEEtran}
+\bibliography{referencias}
+
+% =====================================================================
+\clearpage
+\onecolumn
+\renewcommand{\topfraction}{0.98}\renewcommand{\bottomfraction}{0.9}\renewcommand{\textfraction}{0.02}\renewcommand{\floatpagefraction}{0.35}\setcounter{totalnumber}{8}\setcounter{topnumber}{6}\setcounter{bottomnumber}{4}
+\appendices
+\scriptsize
+\section*{Apêndice: modelos completos do design}
+CTT e KLM (Fig.~\ref{fig:ctt-c1}, Tabelas~\ref{tab:ctt}--\ref{tab:klm}); MoLIC (Figs.~\ref{fig:molic-a}--\ref{fig:molic-b}); inventário de telas (Tabela~\ref{tab:telas}); conteúdo da ajuda (Tabela~\ref{tab:ajuda}); máquina de estados (Tabela~\ref{tab:estados}); registro de \textit{rationale} (Tabela~\ref{tab:rationale}).
+
+
+\begin{figure}[!h]
+\centering
+\resizebox{!}{0.40\textheight}{\input{partes/ctt_c1}}
+\caption{Árvore CTT de C1 (calibração), versões A e B. Cinza: abstrata; amarelo: usuário; azul: interativa; verde: sistema.}
+\label{fig:ctt-c1}
+\end{figure}
+\begin{table}[!tp]
+\caption{CTT de C2, V1 e V2 em notação textual (V1 e V2 reescrevem a HTA congelada sem alterá-la)}
+\label{tab:ctt}
+\centering
+\input{partes/ctt_texto}
+\end{table}
+\begin{table}[!tp]
+\caption{Linha de base KLM de especialista (caminho mínimo, sem erros). Tempo $= 1{,}35\,n_M + 1{,}38\,A_{\min}$}
+\label{tab:klm}
+\centering
+\input{partes/klm}
+\end{table}
+
+
+\begin{sidewaysfigure}
+\centering
+\input{partes/molic_a}
+\caption{MoLIC, parte (a): navegação, diagnóstico e encerramento. Retângulos arredondados: cenas; pretos: processos do sistema; cinza: acesso ubíquo; tracejado: fala de recuperação de ruptura.}
+\label{fig:molic-a}
+\end{sidewaysfigure}
+
+\begin{figure}[!tp]
+\centering
+\resizebox{0.72\textwidth}{!}{\input{partes/molic_b}}
+\caption{MoLIC, parte (b): gestão de rotinas. Borda dupla: alerta (AL) e captura de erro (CE). O acesso ubíquo da Fig.~\ref{fig:molic-a} vale em todas as cenas.}
+\label{fig:molic-b}
+\end{figure}
+
+
+\begin{table}[!tp]
+\caption{Inventário de telas (ordem visual = ordem em $o_t$; [B]: só na versão B)}
+\label{tab:telas}
+\centering
+\input{partes/telas}
+\end{table}
+
+
+\begin{table}[!tp]
+\caption{Tópicos da Ajuda (S6) por tipo de dúvida; texto igual ao exibido}
+\label{tab:ajuda}
+\centering
+\input{partes/ajuda}
+\end{table}
+
+
+\begin{table}[!tp]
+\caption{Máquina de estados da interação (UA: acesso ubíquo, disponível em todos os estados exceto diálogos modais)}
+\label{tab:estados}
+\centering
+\input{partes/estados}
+\end{table}
+
+
+\begin{table}[!tp]
+\caption{Decisões de design (Q: questão; O: opções; C: critérios; D: decisão)}
+\label{tab:rationale}
+\centering
+\input{partes/rationale}
+\end{table}
+
+\end{document}

@@ -1,0 +1,22 @@
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}P{2.2cm}P{0.9cm}P{2.6cm}P{2.2cm}P{0.5cm}YP{2.3cm}@{}}
+\toprule
+\textbf{Signo} & \textbf{Origem} & \textbf{Conteúdo (tipo, restrições, default)} & \textbf{Expressão} & \textbf{Tipo} & \textbf{Na observação do agente} & \textbf{Evento} \\
+\midrule
+rotina.nome & dom (criado pela filha) & texto & item de lista; título em S3 & E & literal & \ev{screen\_view} \\
+rotina.situação & aplic & \{Ativa, Pausada\} & texto sob o nome & D & literal; mudança como ``Mudou na tela'' & \ev{state\_changed}(status) \\
+rotina.regra & transf & ``Se <condição>, então <ações>'' & texto em S3 & E & literal & \ev{screen\_view}(S3) \\
+rotina.pausar/retomar & aplic & alterna a situação & ícone (duas barras $\leftrightarrow$ triângulo), sem texto & E/D & ``botão com ícone de duas barras verticais, sem texto''; com M2: ``[ícone sem nome]'', fora da lista & \ev{action\_executed}; \ev{state\_changed} \\
+rotina.editar & aplic & abre S4 & ícone de lápis, sem texto, adjacente ao anterior & E & ``botão com ícone de lápis, sem texto''; M2 como acima & \ev{screen\_view}(S4) \\
+rotina.excluir & aplic & ação destrutiva com AL e RA & texto vermelho ``Excluir rotina'' & E & literal (a cor não é descrita: o texto já diz a ação) & \ev{dialog\_shown}(AL) \\
+alerta.exclusão (AL) & aplic & confirmação & diálogo modal & M & texto e botões literais & \ev{dialog\_shown}, \ev{dialog\_choice} \\
+faixa.desfazer & aplic & RA da exclusão; some ao sair de S2 & faixa em S2 & D & literal enquanto visível & \ev{state\_changed}(restaurada) \\
+rotina.horário & aplic & 00h--23h, passo 1~h, sem volta de 23h para 0h (PA); default da rotina & ``Smart Schedule'' + valor + ``$-$''/``$+$'' + ``de 00h a 23h'' & D & literal, em inglês; valor atualizado como ``Mudou na tela'' & \ev{action\_executed} \\
+rotina.aparelhos & dom & caixas; marcadas conforme a rotina & caixa + nome & D & ``caixa com marca de seleção, \texttt{"Cafeteira"}'' ou ``caixa vazia, \texttt{"Cafeteira"}'' (a marca é visível) & \ev{action\_executed} \\
+editar.salvar/cancelar & conv & botões & texto & E & literal & \ev{state\_changed}; \ev{dialog\_shown}(CE) \\
+captura.CE1 & aplic & alterações não salvas & diálogo modal & M & literal & \ev{dialog\_shown}, \ev{dialog\_choice} \\
+dica local ``?'' & aplic & abre S9 sobre a tela & botão ``?'' & M & ``tocar \texttt{"?"}''; o balão só após o toque & \ev{support\_open}(dica) \\
+ajuda.tópico & aplic & perguntas e respostas (Tabela~\ref{tab:ajuda}) & lista em S6 & M & literal, só após abrir S6 e o tópico & \ev{support\_open}(ajuda, tópico) \\
+caderno.nota & --- (artefato da persona) & caminho anotado & papel, fora da tela & --- & ``Sua anotação: ...'' com prob. $r_{\mathrm{nota}}$ (M5) & \ev{note\_shown} (só sintético) \\
+\bottomrule
+\end{tabularx}

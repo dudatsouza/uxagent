@@ -1,0 +1,21 @@
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}P{2.3cm}P{2.3cm}YP{2.0cm}P{2.3cm}P{1.3cm}@{}}
+\toprule
+\textbf{Operação da HTA} & \textbf{Erro previsto} & \textbf{Mecanismo} & \textbf{Signo} & \textbf{Evento} & \textbf{Métrica} \\
+\midrule
+C1.1.2 Tocar Histórico; V1.1, V2.1 & Engano: não busca a origem (``Cadê?'') & PP: aba ``Histórico'' com texto em toda tela; tópico H5 da Ajuda. RA: a busca pode ser feita a qualquer momento antes de Confirmar & barra.navegação & \ev{screen\_view(S5)} & $R_{\mathrm{ATR}}$, $U$ \\
+C1.1.4 e 3.2 Decidir e escolher a causa & E-ATR & PP: origem escrita em S5; [B] painel ``Por quê?''. RA: ``Voltar'' em S7 e troca de opção antes de Confirmar & historico.linha; painel.causa & \ev{cause\_selected} & $R_{\mathrm{ATR}}$ \\
+C1.2.3 Tocar interruptor & E-SLP (aciona o vizinho) & PP: nome e estado em texto ao lado de cada interruptor. RA: tocar de novo; aviso e Histórico mostram a mudança & aparelho.estado & \ev{action\_executed}, \ev{state\_changed} & $R_{\mathrm{SLP}}$, $X$ \\
+C1.3.1, C2.3 Tocar Concluir & E-OMI (conclui sem o estado-alvo) & PP: instrução do protocolo. RA: ``Voltar'' em S7. Sem PA nem CE: o sistema não conhece o objetivo da tarefa, e avisar seria entregar o critério de sucesso & barra.concluir & \ev{task\_end} & $S$, $R_{\mathrm{OMI}}$ \\
+C1.3.3 Confirmar & Confirmar sem resposta & CE2: ``Escolha uma resposta antes de confirmar.'' PP: pergunta sem opção pré-marcada & concluir.pergunta & \ev{dialog\_shown(CE)} & --- (falha de operação, não erro de tarefa) \\
+C2.1.2 / V1.2.3 Escolher a rotina & E-ACT (age na rotina errada) & PP: nome e situação em S2; regra completa em S3 antes de agir. RA: retomar (mesmo botão) & rotina.nome; rotina.regra & \ev{state\_changed(status)} & $R_{\mathrm{ACT}}$ \\
+C2.2.1 / V1.3.1 Tocar ícone de pausa & Engano: não reconhece o ícone (``O que é isto?'') & PP: dica local ``?'' e tópico H2. RA: o mesmo botão retoma & rotina.pausar & \ev{support\_open}, \ev{state\_changed} & $U$, $X$ \\
+C2.2.1 / V1.3.1 (adjacente) & E-ACT: toca ``Excluir rotina'' & PP: texto vermelho ``Excluir rotina'', separado dos ícones. AL: alerta de confirmação. RA: faixa ``Desfazer'' em S2 & rotina.excluir; alerta & \ev{dialog\_shown(AL)}, \ev{dialog\_choice}, \ev{state\_changed} & $R_{\mathrm{ACT}}$ \\
+C2.2.2 Tocar ícone de editar & D: toca a pausa (adjacente) & PP: dica local. RA: retomar & rotina.editar & \ev{action\_executed} & $R_{\mathrm{SLP}}$ \\
+C2.2.3 Desmarcar aparelho & E-SLP (caixa vizinha) & PP: nome ao lado da caixa. RA: marcar de novo ou ``Cancelar'' & rotina.aparelhos & \ev{action\_executed} & $R_{\mathrm{SLP}}$ \\
+C2.2.4 / V2.4 Tocar Salvar & E-OMI: sai sem salvar & PP: botão ``Salvar'' em texto. CE1: ``Você mudou esta rotina. Salvar as mudanças?'' RA: ``Salvar'' no próprio CE1 & captura.CE1 & \ev{dialog\_shown(CE)}, \ev{dialog\_choice} & $R_{\mathrm{OMI}}$ \\
+V2.3.1 Tocar ``$+$'' & E-SLP: toca ``$-$'' & PP: sinais grandes e valor em destaque. RA: o botão inverso & rotina.horário & \ev{action\_executed} & $R_{\mathrm{SLP}}$, $X$ \\
+V2.3.1 (limite) & Passar de 23h para 0h & PA: valor preso em 00h--23h. PP: nota ``de 00h a 23h''. RA: ``$-$'' & rotina.horário & \ev{action\_executed} sem mudança & --- \\
+V2.3.2 Conferir horário & L: perde a conta & PP: horário atualizado após cada toque (signo dinâmico). RA: ``$+$''/``$-$'' & rotina.horário & --- (inferido) & $X$ \\
+\bottomrule
+\end{tabularx}

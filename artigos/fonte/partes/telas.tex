@@ -1,0 +1,17 @@
+\begin{tabularx}{\textwidth}{@{}P{2.4cm}Y@{}}
+\toprule
+\textbf{Tela} & \textbf{Elementos, em ordem} \\
+\midrule
+Barra superior (todas) & Botão ``Concluir''; botão ``Desistir'' \\
+S1 Início & Aviso (se houver mudança automática): ``<Aparelho>: <ligada|desligada> às <hh:mm>'' \textit{[B: + botões ``Por quê?'' e ``Desfazer'']}; título do cômodo; para cada aparelho: nome, texto do estado (``Ligada''/``Desligada''), interruptor. Aparelhos: Luz da sala, Ar-condicionado do quarto, Cafeteira, Tomada do ventilador \\
+S2 Rotinas & Título ``Rotinas''; para cada rotina: nome e situação (``Ativa''/``Pausada''); faixa ``Rotina <nome> excluída. Desfazer'' (só logo após uma exclusão, até sair de S2) \\
+S3 Detalhe da rotina & Botão ``Voltar''; nome; situação; regra ``Se <condição>, então <ações>''; botão com ícone de duas barras verticais (pausar) ou de triângulo (retomar), sem texto; botão com ícone de lápis (editar), sem texto, adjacente; botão ``?''; botão de texto vermelho ``Excluir rotina'' \\
+S4 Editar rotina & Botão ``Cancelar''; ``Smart Schedule'' com o horário (``07h00''), botões ``$-$'' e ``$+$'' adjacentes e a nota ``de 00h a 23h''; ``Aparelhos'': caixa de seleção e nome de cada aparelho; botão ``?''; botão ``Salvar'' \\
+S5 Histórico & Título; linhas ``<hh:mm> · <aparelho> · <novo estado> · <origem>'', com origem ``Você'' ou ``Rotina <nome>'', da mais recente à mais antiga \\
+S6 Ajuda & Lista de perguntas (Tabela~\ref{tab:ajuda}); ao tocar, o texto da resposta; botão ``Voltar'' \\
+S7 Concluir & Pergunta ``Por que isso aconteceu?'' com as opções ``Eu ou outra pessoa'', ``Defeito'', uma por rotina existente, ``Não sei'' (só em C1, V1 e V2); em C2, o texto ``Você terminou?''; botões ``Confirmar'' e ``Voltar'' \\
+S8 Painel ``Por quê?'' \textit{[B]} & Texto da causa (``A rotina <nome> <ação> <aparelho> às <hh:mm> porque <condição>''); botões ``Desfazer'', ``Ir para a rotina'' e ``Fechar'' \\
+S9 Dica local & Balão sobre S3 ou S4 com o significado dos ícones e campos da tela; botão ``Fechar'' \\
+Diálogos & AL: ``Excluir a rotina <nome>? Ela sai da lista de rotinas.'' [Cancelar] [Excluir]. CE1: ``Você mudou esta rotina. Salvar as mudanças?'' [Salvar] [Sair sem salvar]. CE2 (em S7): ``Escolha uma resposta antes de confirmar.'' \\
+\bottomrule
+\end{tabularx}

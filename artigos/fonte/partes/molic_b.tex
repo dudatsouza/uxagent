@@ -1,0 +1,52 @@
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  scene/.style={draw, rounded corners=6pt, text width=3.3cm, align=left, font=\scriptsize, inner sep=3pt, fill=white},
+  alert/.style={scene, double},
+  proc/.style={fill=black, minimum width=6mm, minimum height=3mm, inner sep=0pt},
+  tr/.style={-{Latex[length=1.8mm]}, thin},
+  rec/.style={tr, dashed},
+  lab/.style={font=\tiny, align=center, fill=white, inner sep=1pt},
+  conn/.style={font=\scriptsize\itshape, align=center}
+]
+\node[conn] (inS2) at (0,3.0) {acesso ubíquo:\\ver rotinas};
+\node[conn] (inS3) at (3.4,3.0) {S8: ir para\\a rotina [B]};
+\node[scene] (s2) at (0,0) {\cena{S2 Rotinas}{Ver as rotinas}{d: nome e situação\\u: abrir rotina\\u: desfazer exclusão (faixa)}};
+\node[scene] (s3) at (5.2,0) {\cena{S3 Rotina}{Ver e controlar a rotina}{d: regra se\dots então, situação\\u: pausar/retomar (ícone)\\u: editar rotina (ícone)\\u: excluir rotina\\u: ver dica (?)\\u: voltar}};
+\node[alert] (al) at (10.8,0) {\cena{Alerta (AL)}{Confirmar exclusão}{d: Excluir a rotina X? Ela sai da lista.\\u: excluir\\u: cancelar}};
+\node[proc, label={[font=\tiny]left:restaurar rotina}] (p5) at (-1.0,-3.2) {};
+\node[proc, label={[font=\tiny]above:pausar/retomar}] (p3) at (7.4,3.0) {};
+\node[proc, label={[font=\tiny]right:excluir rotina}] (p4) at (10.8,3.0) {};
+\node[scene] (s4) at (5.2,-6.0) {\cena{S4 Editar rotina}{Mudar horário e aparelhos}{d: Smart Schedule hh:00 (00h--23h)\\d: aparelhos com caixas\\u: aumentar/diminuir horário\\u: marcar/desmarcar aparelho\\u: salvar \quad u: cancelar\\u: ver dica (?)}};
+\node[proc, label={[font=\tiny]right:salvar rotina}] (p7) at (8.0,-3.0) {};
+\node[proc, label={[font=\tiny]right:ajustar valor (PA: 00h--23h)}] (p6) at (5.2,-9.6) {};
+\node[alert] (ce) at (11.2,-6.0) {\cena{Captura (CE1)}{Alterações não salvas}{d: Você mudou esta rotina. Salvar as mudanças?\\u: salvar\\u: sair sem salvar}};
+\node[scene] (s9) at (0,-6.0) {\cena{S9 Dica local}{Explicar os símbolos da tela}{d: significado dos ícones e de Smart Schedule\\u: fechar}};
+\node[conn] (orig9) at (0,-9.6) {cena de origem};
+% entradas
+\draw[tr] (inS2) -- (s2);
+\draw[tr] (inS3) -- ([xshift=-12mm]s3.north);
+% S2
+\draw[tr] ([yshift=3mm]s2.east) -- node[lab, above]{u: abrir rotina} ([yshift=3mm]s3.west);
+\draw[tr] ([yshift=-8mm]s3.west) -- node[lab, below]{u: voltar} ([yshift=-8mm]s2.east);
+\draw[rec] ([xshift=-8mm]s2.south) -- node[lab, left]{u: desfazer\\exclusão (RA)} (p5);
+\draw[tr] (p5) -- node[lab, right]{d: rotina\\de volta} ([xshift=-1mm]s2.south);
+% S3
+\draw[tr] ([xshift=10mm]s3.north) -- node[lab, left]{u: pausar|retomar} (p3);
+\draw[tr] (p3) -- node[lab, right]{d: situação\\atualizada} ([xshift=17mm]s3.north east);
+\draw[tr] ([yshift=4mm]s3.east) -- node[lab, above]{u: excluir rotina} ([yshift=4mm]al.west);
+\draw[rec] ([yshift=-6mm]al.west) -- node[lab, below]{u: cancelar} ([yshift=-6mm]s3.east);
+\draw[tr] (al) -- node[lab, right]{u: excluir} (p4);
+\draw[tr] (p4.north) -- ++(0,0.8) -| node[lab, above, pos=0.25]{d: rotina excluída + faixa ``Desfazer''} ([xshift=-14mm]s2.north);
+\draw[tr] ([xshift=-6mm]s3.south) -- node[lab, left]{u: editar rotina} ([xshift=-6mm]s4.north);
+\draw[tr] ([xshift=-14mm]s3.south) -- node[lab, above left]{u: ver dica} (s9.north east);
+% S4
+\draw[tr] ([xshift=10mm]s4.north) -- node[lab, left, pos=0.3]{u: salvar} (p7);
+\draw[tr] (p7) -- node[lab, right]{d: rotina salva} ([xshift=12mm]s3.south);
+\draw[tr] ([xshift=-4mm]s4.south) -- node[lab, left]{u: aumentar|diminuir|\\marcar|desmarcar} (p6);
+\draw[tr] (p6) -- node[lab, right]{d: valor exibido} ([xshift=4mm]s4.south);
+\draw[tr] (s4.east) -- node[lab, above]{u: cancelar} node[lab, below]{(com alterações)} (ce.west);
+\draw[tr] (ce.north west) -- node[lab, right]{u: salvar} (p7);
+\draw[rec] (ce.north) to[out=95, in=-20] node[lab, right, pos=0.5]{u: sair sem salvar} ([xshift=16mm]s3.south east);
+\draw[tr] (s4.west) -- node[lab, above]{u: ver dica} (s9.east);
+\draw[tr] (s9) -- node[lab, right]{u: fechar\\d: retorno} (orig9);
+\end{tikzpicture}}

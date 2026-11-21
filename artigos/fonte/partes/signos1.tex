@@ -1,0 +1,18 @@
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\textwidth}{@{}P{2.2cm}P{0.9cm}P{2.6cm}P{2.2cm}P{0.5cm}YP{2.3cm}@{}}
+\toprule
+\textbf{Signo} & \textbf{Origem} & \textbf{Conteúdo (tipo, restrições, default)} & \textbf{Expressão} & \textbf{Tipo} & \textbf{Na observação do agente} & \textbf{Evento} \\
+\midrule
+aparelho.nome & dom & texto; 4 aparelhos fixos & rótulo à esquerda & E & \texttt{"Luz da sala"} & \ev{screen\_view} \\
+aparelho.estado & dom & \{Ligada, Desligada\}; inicial pela tarefa & texto sob o nome + interruptor & D & \texttt{"Desligada"}, interruptor; mudança: ``Mudou na tela: Luz da sala: Desligada $\rightarrow$ Ligada'' & \ev{state\_changed} \\
+aviso.mudança & aplic & ``<aparelho>: <estado> às <hh:mm>''; sem origem & faixa no topo de S1 & D & texto literal; nunca a origem & \ev{screen\_view} \\
+aviso.porque \textit{[B]} & aplic & botão & texto ``Por quê?'' & E & ``tocar \texttt{"Por quê?"}'' & \ev{support\_open} (por\_que) \\
+aviso.desfazer \textit{[B]} & aplic & botão; desfaz a última mudança automática & texto ``Desfazer'' & E & ``tocar \texttt{"Desfazer"}'' & \ev{state\_changed} (origem=pessoa) \\
+painel.causa \textit{[B]} & aplic & texto; nome da rotina, ação, hora, condição & painel sob o aviso & M & texto literal, só após tocar ``Por quê?'' & \ev{support\_open}/\ev{close} \\
+historico.linha & transf & hora, aparelho, estado, origem \{Você, Rotina <nome>\} & lista em S5 & D & linhas literais, só com S5 aberta & \ev{screen\_view}(S5) \\
+barra.navegação & conv & Início, Rotinas, Histórico, Ajuda & abas com ícone e texto & E & ``Barra inferior: \texttt{"Início"}, \texttt{"Rotinas"}, \texttt{"Histórico"}, \texttt{"Ajuda"}'' (o texto basta; ícones das abas omitidos por redundância) & \ev{screen\_view} \\
+barra.concluir, barra.desistir & conv (instrumento) & botões; sempre visíveis & texto & E & literal & \ev{screen\_view}(S7); \ev{task\_end} \\
+concluir.pergunta & aplic & opções fechadas; nenhuma pré-marcada & botões de opção & E & ``\texttt{"Por que isso aconteceu?"}'' e opções literais; marcada: ``(selecionada)'' porque a tela mostra o círculo preenchido & \ev{cause\_selected} \\
+concluir.CE2 & aplic & mensagem de captura & texto vermelho sob a pergunta & M & literal, só depois de Confirmar sem resposta & \ev{dialog\_shown}(CE) \\
+\bottomrule
+\end{tabularx}

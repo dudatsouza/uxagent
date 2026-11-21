@@ -1,0 +1,23 @@
+\begin{tabularx}{\textwidth}{@{}P{1.1cm}Y@{}}
+\toprule
+\textbf{Tarefa} & \textbf{Expressão CTT} \\
+\midrule
+C2 & C2 = (Núcleo \susp{} ConsultarAjuda) \deact{} Encerrar \\
+& Núcleo = EncontrarRotina \enab{} SuspenderAção \enab{} ConcluirC2 \\
+& EncontrarRotina = TocarRotinas[I] \enab{} ExibirLista[S] \enabinfo{} (IdentificarRotina[U] \enabinfo{} TocarRotina[I] \enab{} ExibirDetalhe[S])\iter \quad \textit{(ciclo do plano 1 da HTA)} \\
+& SuspenderAção = Pausar \choice{} EditarDesmarcar \\
+& Pausar = TocarÍconePausa[I] \enab{} AtualizarSituação[S] \\
+& EditarDesmarcar = TocarÍconeEditar[I] \enab{} ExibirEdição[S] \enab{} DesmarcarCafeteira[I] \enab{} TocarSalvar[I] \enab{} SalvarRotina[S] \\
+& ConcluirC2 = TocarConcluir[I] \enab{} ExibirConfirmação[S] \enab{} TocarConfirmar[I] \enab{} RegistrarFim[S] \\
+\midrule
+V1 & V1 = (Núcleo \susp{} ConsultarAjuda) \deact{} Encerrar \\
+& Núcleo = IdentificarCausa \enabinfo{} LocalizarRotina \enab{} ImpedirRepetição \enab{} Concluir \quad \textit{(IdentificarCausa e Concluir como em C1)} \\
+& LocalizarRotina = TocarIrParaRotina[I]\textit{[B]} \choice{} (TocarRotinas[I] \enab{} ExibirLista[S] \enabinfo{} TocarHorárioDePico[I]) \\
+& ImpedirRepetição = Pausar \choice{} EditarDesmarcar(Tomada do ventilador) \\
+\midrule
+V2 & V2 = (Núcleo \susp{} ConsultarAjuda) \deact{} Encerrar \\
+& Núcleo = IdentificarCausa \enabinfo{} AbrirEdição \enab{} AjustarHorário \enab{} TocarSalvar[I] \enab{} SalvarRotina[S] \enab{} Concluir \\
+& AbrirEdição = (TocarIrParaRotina[I]\textit{[B]} \choice{} (TocarRotinas[I] \enab{} TocarClimatização[I])) \enab{} TocarÍconeEditar[I] \enab{} ExibirEdição[S] \\
+& AjustarHorário = (TocarMais[I] \enab{} ExibirHorário[S] \enabinfo{} ConferirHorário[U])\iter \quad \textit{(até ler 21h00; ciclo do plano 3 da HTA)} \\
+\bottomrule
+\end{tabularx}

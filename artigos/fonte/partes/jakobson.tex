@@ -1,0 +1,17 @@
+\begin{tabularx}{\textwidth}{@{}P{1.2cm}P{2.6cm}YYP{3.6cm}@{}}
+\toprule
+\textbf{Elemento} & \textbf{Pergunta do designer} & \textbf{Para a persona} & \textbf{Para o agente} & \textbf{Diferença declarada e status} \\
+\midrule
+Emissor & Que limitações e intenções do designer devem ser comunicadas? & O aplicativo mostra o que a casa faz sozinha e permite desfazer; as rotinas foram criadas por outra pessoa; exclusão exige confirmação & As mesmas intenções, reconstruídas só a partir dos signos de $o_t$; nenhuma explicação adicional do designer no prompt & Nenhuma no conteúdo. O agente recebe também a instrução de formato da resposta (escolher um número da lista), que não comunica intenção do designer da interface. \stPD \\
+\addlinespace
+Receptor & Que aspectos do usuário, como interpretado pelo designer, devem ser comunicados? & Novata em automação, lê português, receio de errar, usa a Ajuda quando insegura & LLM com a ficha da persona e o estado $x_t$ (crença, notas, rótulos aprendidos); comportamento do perfil vem de M1--M6, não do texto & O LLM conhece convenções de aplicativos pelo pré-treinamento (por exemplo, o ícone de duas barras). M2 compensa em parte, com probabilidade $q_{\mathrm{rot}}$. \stHO \\
+\addlinespace
+Contexto & Que elementos do contexto o sistema processa, e como? & Casa, à tarde, uma mão, sozinha; o aplicativo processa só os estados dos aparelhos e das rotinas & Sem contexto físico; o contexto chega apenas pela instrução literal da tarefa & Sem tempo, cansaço, pressão nem interrupções; diferença declarada nos limites de uso. \stHO \\
+\addlinespace
+Código & Qual é a linguagem de interface? & Manipulação direta por toque; texto em português; dois ícones sem texto; um rótulo em inglês & Texto em português que descreve a tela na ordem visual; ícones descritos pela forma; ações numeradas & Tradução visual $\rightarrow$ verbal. Descrever a forma do ícone é tomado como equivalente a vê-lo. \stHO \\
+\addlinespace
+Canal & Por quais canais a metacomunicação chega? & Tela do smartphone (signos estáticos e dinâmicos); Ajuda, dica local e painel ``Por quê?'' (metalinguísticos), só quando abertos & $o_t$ textual a cada passo; os signos metalinguísticos só entram em $o_t$ depois de uma ação registrada de abrir ajuda & Canal diferente, conteúdo equivalente (regra de equivalência de canal). \stPD \\
+\addlinespace
+Mensagem & O que se quer contar, e com que efeito? & A metamensagem acima: ``você pode ver e desfazer o que a casa faz sozinha'' & A mesma, inferida pelo agente a partir dos signos & Nenhuma intencional; se o agente a reconstruir melhor que a persona, o efeito vem do LLM, não do design. \stHO \\
+\bottomrule
+\end{tabularx}

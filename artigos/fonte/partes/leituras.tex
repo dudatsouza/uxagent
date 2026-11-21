@@ -1,0 +1,13 @@
+\begin{tabularx}{\textwidth}{@{}P{2.4cm}YYP{3.6cm}@{}}
+\toprule
+\textbf{Elemento} & \textbf{Leitura da persona} & \textbf{Leitura do agente (observação ou ação)} & \textbf{Evento registrado} \\
+\midrule
+Cena & Uma tela com um assunto (``ver a casa'', ``ver a rotina'') & Observação $o_t$ com título, signos e lista de ações & \ev{screen\_view} (tela, elementos visíveis) \\
+Fala u: & Algo que ela pode tocar ou alternar ali & Item numerado da lista de ações; é a única coisa que o agente pode responder & \ev{action\_proposed}$^*$, \ev{action\_executed} \\
+Fala d: & O que a tela mostra depois do toque & Próxima $o'_t$, com a linha ``Mudou na tela'' quando for o caso & \ev{screen\_view} ou \ev{state\_changed} \\
+Processo do sistema & O aparelho ou a rotina muda & Invisível como processo; só o resultado aparece na próxima observação & \ev{state\_changed} (variáveis, origem) \\
+Fala de recuperação & Desfazer, cancelar, voltar & Ação comum da lista; não é marcada como ``recuperação'' para o agente & \ev{action\_executed}; \ev{dialog\_choice}; etiqueta MAC derivada \\
+Alerta e captura & Uma caixa que pergunta ou avisa & Observação da caixa com suas duas opções & \ev{dialog\_shown} (AL ou CE), \ev{dialog\_choice} \\
+Acesso ubíquo à ajuda & Aba Ajuda e botão ``?'' em qualquer tela & Itens da lista em toda observação (``tocar Ajuda'', ``tocar ?''); o texto só chega após o toque & \ev{support\_open}, \ev{support\_close} \\
+\bottomrule
+\end{tabularx}

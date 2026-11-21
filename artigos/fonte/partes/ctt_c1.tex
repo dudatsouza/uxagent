@@ -1,0 +1,80 @@
+\resizebox{\textwidth}{!}{%
+\begin{forest}
+for tree={grow'=east, parent anchor=east, child anchor=west, anchor=west,
+  draw, rounded corners=2pt, font=\scriptsize, align=left, inner sep=2pt,
+  l sep=4mm, s sep=0.6mm, edge={thin}},
+op/.style={draw=none, no edge, font=\footnotesize, inner sep=0pt},
+abs/.style={fill=gray!20},
+usr/.style={fill=yellow!25},
+int/.style={fill=blue!12},
+sys/.style={fill=green!15},
+[{C1 Restaurar a luz\\e explicar [A]}, abs
+  [{Executar C1 [A]}, abs
+    [{Núcleo C1 [A]}, abs
+      [{Identificar causa [A]}, abs
+        [{Pelo Histórico [A]}, abs
+          [{Tocar Histórico [I]}, int]
+          [\enab, op]
+          [{Exibir Histórico [S]}, sys]
+          [\enabinfo, op]
+          [{Ler origem [U]}, usr]
+        ]
+        [\choice, op]
+        [{Pelo painel \textit{[B]} [A]}, abs
+          [{Tocar ``Por quê?'' [I]}, int]
+          [\enab, op]
+          [{Exibir painel [S]}, sys]
+          [\enabinfo, op]
+          [{Ler explicação [U]}, usr]
+        ]
+        [\enabinfo, op]
+        [{Decidir causa [U]}, usr]
+      ]
+      [\ordind, op]
+      [{Acender luz [A]}, abs
+        [{Pelo interruptor [A]}, abs
+          [{[Ir para Início] [I]}, int]
+          [\enab, op]
+          [{Tocar interruptor [I]}, int]
+          [\enab, op]
+          [{Atualizar estado [S]}, sys]
+        ]
+        [\choice, op]
+        [{Por Desfazer \textit{[B]} [A]}, abs
+          [{Tocar Desfazer [I]}, int]
+          [\enab, op]
+          [{Atualizar estado [S]}, sys]
+        ]
+      ]
+      [\enabinfo, op]
+      [{Concluir [A]}, abs
+        [{Tocar Concluir [I]}, int]
+        [\enab, op]
+        [{Exibir pergunta [S]}, sys]
+        [\enab, op]
+        [{Escolher causa [I]}, int]
+        [\enab, op]
+        [{Tocar Confirmar [I]}, int]
+        [\enab, op]
+        [{Registrar fim [S]}, sys]
+      ]
+    ]
+    [\susp, op]
+    [{Consultar ajuda [A]}, abs
+      [{Tocar Ajuda ou ``?'' [I]}, int]
+      [\enab, op]
+      [{Exibir ajuda [S]}, sys]
+      [\enabinfo, op]
+      [{Ler ajuda [U]}, usr]
+      [\enab, op]
+      [{Voltar [I]}, int]
+    ]
+  ]
+  [\deact, op]
+  [{Encerrar [A]}, abs
+    [{Tocar Desistir [I]}, int]
+    [\choice, op]
+    [{Atingir limite [S]}, sys]
+  ]
+]
+\end{forest}}

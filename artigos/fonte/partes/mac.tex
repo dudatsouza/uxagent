@@ -1,0 +1,14 @@
+\begin{tabularx}{\textwidth}{@{}P{2.2cm}YP{4.4cm}@{}}
+\toprule
+\textbf{Etiqueta} & \textbf{Assinatura no registro} & \textbf{Onde se espera e o que indica} \\
+\midrule
+``Cadê?'' & Três ou mais \ev{screen\_view} seguidos por acesso ubíquo ou Voltar, sem \ev{state\_changed} nem \ev{support\_open} entre eles & C1/V1/V2 em A, procurando a origem; C2 procurando as rotinas. Signo de navegação que não comunica onde está a função \\
+``O que é isto?'' & \ev{support\_open} na camada dica ou nos tópicos H2, H3 ou H4 & S3 e S4: ícones sem texto e ``Smart Schedule'' (L2) \\
+``Epa!'' & \ev{action\_executed} seguido, em até duas ações, da ação inversa sobre o mesmo elemento (alternar de volta, $-$ após $+$, retomar após pausar, Desfazer exclusão) ou \ev{dialog\_choice(cancelar)} no AL & Interruptores adjacentes, ícones adjacentes, $\pm$ (L3, L4) \\
+``Onde estou?'' & \ev{screen\_view(X)} seguido de saída de X na ação seguinte, sem nenhuma outra ação em X, duas ou mais vezes na tarefa & Entra e sai de telas sem agir; cena não se identifica \\
+``Por que não funciona?'' & A mesma ação executada duas ou mais vezes seguidas sem \ev{state\_changed} (por exemplo, Confirmar sem resposta; $+$ em 23h) & S7 e S4; o sistema não responde como esperado \\
+``Socorro!'' & \ev{support\_open} na camada ajuda (S6), qualquer tópico & Qualquer cena; complementa ``O que é isto?'' \\
+``Para mim está bom'' & \ev{task\_end(concluida)} e verificador = fracasso & E-OMI e E-ATR: a pessoa acha que terminou \\
+``Desisto'' & \ev{task\_end(desistencia)} & Qualquer cena; ruptura total \\
+\bottomrule
+\end{tabularx}
