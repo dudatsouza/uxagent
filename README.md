@@ -50,6 +50,14 @@ Demonstração comentada de uma execução (para o vídeo E5):
 .venv/bin/python -m uxagent demo --config configs/persona_lucia.yaml --politica llm --versao B --tarefa C1
 ```
 
+CasaFácil no navegador (abre `http://localhost:8765`), com dois modos: **Usar o app**, em que uma pessoa toca nas telas (não grava dados do estudo), e **Replay do agente**, que refaz passo a passo uma sessão gravada, mostrando onde o agente tocou, a justificativa, os mecanismos e o resultado do verificador. Usa a mesma máquina de estados de `casafacil.py`; só C1 e C2:
+
+```bash
+.venv/bin/python -m uxagent app
+```
+
+O roteiro do vídeo de demonstração (E5) está em `docs/roteiro_video_E5.md`.
+
 Sem credencial, troque `--politica llm` por `--politica regras` (executor por regras, controle) ou `--politica aleatoria`.
 
 Verificar e calcular métricas de uma pasta já existente:

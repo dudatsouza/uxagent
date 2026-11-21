@@ -7,7 +7,7 @@ DESTINO="../entregas/E3_piloto_Lacerda_Souza.zip"
 mkdir -p ../entregas
 rm -f "$DESTINO"
 PASTAS=""
-for p in dados/piloto_llm dados/piloto_instrumentacao dados/teste_llm; do
+for p in dados/piloto_llm dados/piloto_instrumentacao dados/teste_llm dados/demo; do
   [ -d "$p" ] && PASTAS="$PASTAS $p"
 done
 [ -d dados/piloto_llm ] || echo "AVISO: dados/piloto_llm não existe; o pacote leva só o piloto de instrumentação."

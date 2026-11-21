@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CasaFácil — UXAgent</title>
+<style>
+  :root {
+    --bg: #eef1f5; --card: #ffffff; --tx: #1d2430; --tx2: #5b6575; --linha: #dde2e9;
+    --azul: #2563eb; --azul-claro: #e8efff; --verde: #16a34a; --verde-claro: #e7f6ec;
+    --verm: #dc2626; --verm-claro: #fdecec; --amar: #fff6d6; --amar-borda: #f0c94a;
+    --laranja: #f59e0b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         background: var(--bg); color: var(--tx); }
+  header.topo { display: flex; align-items: center; gap: 16px; padding: 14px 24px;
+                background: var(--card); border-bottom: 1px solid var(--linha); flex-wrap: wrap; }
+  header.topo h1 { font-size: 18px; margin: 0; }
+  header.topo .sub { color: var(--tx2); font-size: 13px; }
+  .abas-modo { margin-left: auto; display: flex; gap: 6px; }
+  .abas-modo button { border: 1px solid var(--linha); background: var(--card); padding: 8px 14px;
+                      border-radius: 8px; font-size: 14px; cursor: pointer; }
+  .abas-modo button.ativo { background: var(--azul); color: #fff; border-color: var(--azul); }
+  main { display: flex; gap: 28px; padding: 24px; align-items: flex-start; justify-content: center;
+         flex-wrap: wrap; }
+
+  /* ----- celular ----- */
+  .celular { width: 380px; height: min(760px, calc(100vh - 120px)); min-height: 560px; background: #111; border-radius: 44px; padding: 14px;
+             box-shadow: 0 20px 50px rgba(0,0,0,.25); flex: none; }
+  .tela { width: 100%; height: 100%; background: #f7f8fa; border-radius: 32px; overflow: hidden;
+          display: flex; flex-direction: column; position: relative; }
+  .status { height: 28px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 22px; font-size: 12px; font-weight: 600; color: #333; }
+  .barra-sup { display: flex; justify-content: flex-end; gap: 8px; padding: 6px 12px;
+               border-bottom: 1px solid var(--linha); background: #fff; }
+  .titulo { font-size: 22px; font-weight: 700; padding: 12px 18px 6px; }
+  .corpo { flex: 1; overflow-y: auto; padding: 4px 14px 14px; }
+  .nav { display: flex; border-top: 1px solid var(--linha); background: #fff; }
+  .nav .aba { flex: 1; padding: 8px 0 12px; text-align: center; font-size: 11px; color: var(--tx2);
+              border: 0; background: none; cursor: pointer; border-radius: 10px; }
+  .nav .aba .ic { display: block; font-size: 19px; margin-bottom: 2px; }
+  .nav .aba.atual { color: var(--azul); font-weight: 600; }
+
+  .btn { border: 1px solid var(--linha); background: #fff; color: var(--tx); border-radius: 10px;
+         padding: 8px 12px; font-size: 14px; cursor: pointer; }
+  .btn.prim { background: var(--azul); color: #fff; border-color: var(--azul); }
+  .btn.peq { padding: 5px 10px; font-size: 13px; }
+  .btn.perigo { color: var(--verm); border-color: #f3c2c2; background: #fff; width: 100%; margin-top: 14px; }
+  .btn.link { border: 0; background: none; color: var(--azul); padding: 4px 0; }
+  .btn.redondo { width: 44px; height: 44px; border-radius: 50%; font-size: 22px; padding: 0; }
+  .btn.ajuda { width: 32px; height: 32px; border-radius: 50%; padding: 0; font-weight: 700; }
+
+  .aviso { background: var(--amar); border: 1px solid var(--amar-borda); border-radius: 12px;
+           padding: 10px 12px; margin: 6px 0 10px; font-size: 14px; }
+  .aviso .acoes { display: flex; gap: 8px; margin-top: 8px; }
+  .secao { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--tx2);
+           margin: 14px 2px 6px; font-weight: 600; }
+  .cartao { background: #fff; border: 1px solid var(--linha); border-radius: 12px; margin: 6px 0; }
+  .linha { display: flex; align-items: center; gap: 10px; padding: 12px; border-bottom: 1px solid var(--linha); }
+  .linha:last-child { border-bottom: 0; }
+  .linha .nome { flex: 1; font-size: 15px; }
+  .linha .det { display: block; font-size: 12px; color: var(--tx2); }
+  .interruptor { width: 50px; height: 30px; border-radius: 15px; background: #cfd5dd; border: 0;
+                 position: relative; cursor: pointer; flex: none; }
+  .interruptor::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px;
+                        border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: left .15s; }
+  .interruptor.on { background: var(--verde); }
+  .interruptor.on::after { left: 23px; }
+  .item { width: 100%; text-align: left; border: 0; background: none; cursor: pointer; }
+  .selo { font-size: 12px; padding: 2px 8px; border-radius: 10px; background: var(--verde-claro); color: var(--verde); }
+  .selo.pausada { background: #eceff3; color: var(--tx2); }
+  .texto { font-size: 14px; margin: 6px 2px; line-height: 1.4; }
+  .texto.regra { background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 10px 12px; }
+  .texto.situacao { color: var(--tx2); }
+  .texto.resposta { background: var(--azul-claro); border-radius: 10px; padding: 10px 12px; margin: -2px 0 8px; }
+  .texto.erro { color: var(--verm); font-weight: 600; }
+  .controles-rotina { display: flex; gap: 12px; align-items: center; margin: 12px 2px; }
+  .horario { display: flex; align-items: center; gap: 14px; margin: 6px 2px; }
+  .horario .valor { font-size: 28px; font-weight: 700; min-width: 80px; text-align: center; }
+  .caixa { width: 24px; height: 24px; border: 2px solid #9aa4b2; border-radius: 6px; display: inline-flex;
+           align-items: center; justify-content: center; font-size: 16px; color: #fff; background: #fff; flex: none; }
+  .caixa.marcada { background: var(--azul); border-color: var(--azul); }
+  .radio { width: 22px; height: 22px; border: 2px solid #9aa4b2; border-radius: 50%; flex: none; position: relative; }
+  .radio.marcado { border-color: var(--azul); }
+  .radio.marcado::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--azul); }
+  .hist { font-size: 13px; padding: 10px 12px; }
+  .hist b { display: inline-block; min-width: 46px; }
+  .painel-pq { background: var(--azul-claro); border-radius: 12px; padding: 12px; margin: 8px 0; font-size: 14px; line-height: 1.45; }
+  .modal-fundo { position: absolute; inset: 0; background: rgba(0,0,0,.45); display: flex;
+                 align-items: center; justify-content: center; padding: 24px; }
+  .modal { background: #fff; border-radius: 16px; padding: 18px; width: 100%; }
+  .modal p { margin: 0 0 14px; font-size: 15px; }
+  .modal .acoes { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* destaques do replay */
+  .toque { outline: 3px solid var(--verm) !important; outline-offset: 2px; border-radius: 10px;
+           position: relative; animation: pulso 1.2s infinite; }
+  .pretendido { outline: 3px dashed var(--laranja) !important; outline-offset: 2px; border-radius: 10px; }
+  @keyframes pulso { 0%,100% { outline-color: var(--verm); } 50% { outline-color: #ff9a9a; } }
+  .interativo [data-acao] { cursor: pointer; }
+
+  /* ----- painel lateral ----- */
+  .painel { width: 440px; max-width: 100%; background: var(--card); border-radius: 16px; padding: 18px 20px;
+            border: 1px solid var(--linha); }
+  .painel h2 { font-size: 16px; margin: 0 0 10px; }
+  .painel label { font-size: 13px; color: var(--tx2); display: block; margin: 10px 0 4px; }
+  .painel select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--linha); font-size: 14px; }
+  .info { font-size: 13px; color: var(--tx2); line-height: 1.5; }
+  .instrucao { background: #f5f7fa; border-left: 3px solid var(--azul); padding: 10px 12px; font-size: 14px;
+               border-radius: 6px; margin: 10px 0; line-height: 1.45; }
+  .passo { font-weight: 700; font-size: 15px; margin: 12px 0 6px; }
+  .fala { font-size: 15px; margin: 4px 0; }
+  .just { font-style: italic; color: #333; background: #fafbfc; border-radius: 8px; padding: 10px 12px;
+          font-size: 14px; line-height: 1.45; margin: 6px 0; }
+  .chip { display: inline-block; font-size: 12px; padding: 3px 9px; border-radius: 12px; margin: 3px 4px 3px 0;
+          background: #f1ecff; color: #5b21b6; }
+  .chip.desl { background: #fff3dc; color: #92400e; }
+  .chip.est { background: var(--verde-claro); color: #166534; }
+  .controles { display: flex; gap: 8px; margin: 12px 0 4px; align-items: center; }
+  .controles .btn { min-width: 44px; }
+  details { margin-top: 10px; }
+  details pre { white-space: pre-wrap; font-size: 12px; background: #f5f7fa; padding: 10px; border-radius: 8px;
+                max-height: 260px; overflow: auto; }
+  .veredito { border-radius: 12px; padding: 12px 14px; margin-top: 12px; font-size: 14px; line-height: 1.5; }
+  .veredito.ok { background: var(--verde-claro); border: 1px solid #9ad5ac; }
+  .veredito.nok { background: var(--verm-claro); border: 1px solid #efb1b1; }
+  .legenda { font-size: 12px; color: var(--tx2); margin-top: 12px; line-height: 1.6; }
+  .legenda span { display: inline-block; width: 14px; height: 10px; border: 2px solid var(--verm); border-radius: 3px; vertical-align: middle; }
+  .legenda span.p { border: 2px dashed var(--laranja); }
+  .oculto { display: none; }
+  .log { font-size: 13px; color: var(--tx2); max-height: 160px; overflow: auto; margin-top: 6px; }
+</style>
+</head>
+<body>
+<header class="topo">
+  <div>
+    <h1>CasaFácil</h1>
+    <div class="sub">Protótipo usado pelo UXAgent · as telas vêm do mesmo código que o agente usa</div>
+  </div>
+  <div class="abas-modo">
+    <button id="bt-replay" class="ativo">Replay do agente</button>
+    <button id="bt-usar">Usar o app</button>
+  </div>
+</header>
+
+<main>
+  <div class="celular"><div class="tela" id="tela"></div></div>
+
+  <!-- painel: replay -->
+  <section class="painel" id="painel-replay">
+    <h2>Replay de uma execução do agente</h2>
+    <label for="sel-sessao">Sessão gravada</label>
+    <select id="sel-sessao"></select>
+    <label for="sel-tarefa">Tarefa</label>
+    <select id="sel-tarefa"></select>
+    <div id="rp-cab" class="info" style="margin-top:10px"></div>
+    <div id="rp-instr" class="instrucao"></div>
+    <div class="controles">
+      <button class="btn" id="rp-ant" title="Passo anterior">◀</button>
+      <button class="btn prim" id="rp-play">▶ Reproduzir</button>
+      <button class="btn" id="rp-prox" title="Próximo passo">▶</button>
+      <span id="rp-cont" class="info"></span>
+    </div>
+    <div id="rp-passo"></div>
+    <div class="legenda">
+      <span></span> onde o agente tocou &nbsp;&nbsp; <span class="p"></span> onde ele queria tocar (deslize M3)
+    </div>
+  </section>
+
+  <!-- painel: usar -->
+  <section class="painel oculto" id="painel-usar">
+    <h2>Usar o app</h2>
+    <div class="info">Toque nos elementos do celular como uma pessoa faria. Este modo não grava dados do estudo.</div>
+    <label for="us-tarefa">Tarefa</label>
+    <select id="us-tarefa"><option value="C1">C1 — A luz apagou</option><option value="C2">C2 — Viagem</option></select>
+    <label for="us-versao">Versão</label>
+    <select id="us-versao"><option value="A">A — só o estado final</option><option value="B">B — com "Por quê?"</option></select>
+    <div class="controles"><button class="btn prim" id="us-comecar">Começar</button><span id="us-cont" class="info"></span></div>
+    <div id="us-instr" class="instrucao oculto"></div>
+    <div id="us-log" class="log"></div>
+    <div id="us-fim"></div>
+  </section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const telaEl = $("#tela");
+const ICONES = { pausa: "❚❚", retomar: "▶", lapis: "✎" };
+const ABAS = { "nav:S1": "⌂", "nav:S2": "↻", "nav:S5": "☰", "nav:S6": "?" };
+const NOME_ABA_TELA = { "nav:S1": "S1", "nav:S2": "S2", "nav:S5": "S5", "nav:S6": "S6" };
+const esc = (t) => String(t ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function attrs(e) { return e.acao ? ` data-acao="${esc(e.acao)}"` : ""; }
+
+function renderTela(t, opts = {}) {
+  const els = t.elementos;
+  let html = `<div class="status"><span>14:10</span><span>●●● ᯤ ▮</span></div>`;
+  if (t.modal) {
+    const txt = els.find((e) => e.papel === "texto");
+    const bts = els.filter((e) => e.acao);
+    // a tela de baixo continua visível atrás do diálogo (sem ações)
+    const fundo = ultimaTela ? montarTela(ultimaTela).replace(/ data-acao="[^"]*"/g, "") : "";
+    html = fundo + `
+      <div class="modal-fundo"><div class="modal"><p>${esc(txt?.texto)}</p><div class="acoes">
+      ${bts.map((b) => `<button class="btn ${b.acao.endsWith("excluir") ? "perigo" : (b.acao.includes("salvar") ? "prim" : "")}" style="width:auto;margin:0"${attrs(b)}>${esc(b.texto)}</button>`).join("")}
+      </div></div></div>`;
+    telaEl.innerHTML = html;
+    return destacar(opts);
+  }
+  ultimaTela = t;
+  telaEl.innerHTML = montarTela(t);
+  destacar(opts);
+}
+
+let ultimaTela = null;
+function montarTela(t) {
+  const els = t.elementos;
+  const sup = els.filter((e) => e.acao === "concluir" || e.acao === "desistir");
+  const nav = els.filter((e) => e.papel === "aba");
+  const corpo = els.filter((e) => !sup.includes(e) && !nav.includes(e));
+  let html = `<div class="status"><span>14:10</span><span>●●● ᯤ ▮</span></div>`;
+  html += `<div class="barra-sup">${sup.map((b) => `<button class="btn peq"${attrs(b)}>${esc(b.texto)}</button>`).join("")}</div>`;
+  html += `<div class="titulo">${esc(t.titulo)}</div><div class="corpo">${renderCorpo(t, corpo)}</div>`;
+  html += `<nav class="nav">${nav.map((a) => `<button class="aba ${NOME_ABA_TELA[a.acao] === t.tela ? "atual" : ""}"${attrs(a)}><span class="ic">${ABAS[a.acao] || "•"}</span>${esc(a.texto)}</button>`).join("")}</nav>`;
+  return html;
+}
+
+function renderCorpo(t, els) {
+  let h = "", i = 0;
+  const grupo = (papel) => { const g = []; while (i < els.length && els[i].papel === papel) g.push(els[i++]); return g; };
+  while (i < els.length) {
+    const e = els[i];
+    if (e.papel === "texto" && e.texto.startsWith("Aviso:")) {
+      i++; const bts = [];
+      while (i < els.length && (els[i].acao === "porque" || els[i].acao === "desfazer_aviso") && t.tela === "S1") bts.push(els[i++]);
+      h += `<div class="aviso">⚠️ ${esc(e.texto.replace("Aviso: ", ""))}${bts.length ? `<div class="acoes">${bts.map((b) => `<button class="btn peq"${attrs(b)}>${esc(b.texto)}</button>`).join("")}</div>` : ""}</div>`;
+      continue;
+    }
+    if (e.papel === "interruptor") {
+      h += `<div class="cartao">${grupo("interruptor").map((x) => `<div class="linha"><div class="nome">${esc(x.texto)}<span class="det">${esc(x.detalhe)}</span></div><button class="interruptor ${/^Ligad/.test(x.detalhe) ? "on" : ""}" aria-label="${esc(x.texto)}"${attrs(x)}></button></div>`).join("")}</div>`;
+      continue;
+    }
+    if (e.papel === "item") {
+      h += `<div class="cartao">${grupo("item").map((x) => `<button class="item linha"${attrs(x)}><span class="nome">${esc(x.texto)}</span>${x.detalhe ? `<span class="selo ${x.detalhe === "Pausada" ? "pausada" : ""}">${esc(x.detalhe)}</span>` : ""}<span style="color:#aab">›</span></button>${respostaAjuda(els, x)}`).join("")}</div>`;
+      while (i < els.length && els[i].papel === "texto" && els[i]._resp) i++;
+      continue;
+    }
+    if (e.papel === "caixa") {
+      h += `<div class="cartao">${grupo("caixa").map((x) => `<div class="linha"${attrs(x)} style="cursor:pointer"><span class="caixa ${/marca/.test(x.detalhe) ? "marcada" : ""}">✓</span><span class="nome">${esc(x.texto)}</span></div>`).join("")}</div>`;
+      continue;
+    }
+    if (e.papel === "opcao") {
+      h += `<div class="cartao">${grupo("opcao").map((x) => `<div class="linha"${attrs(x)} style="cursor:pointer"><span class="radio ${x.detalhe === "selecionada" ? "marcado" : ""}"></span><span class="nome">${esc(x.texto)}</span></div>`).join("")}</div>`;
+      continue;
+    }
+    if (e.papel === "icone" || (e.acao === "dica" && t.tela === "S3")) {
+      const g = []; while (i < els.length && (els[i].papel === "icone" || els[i].acao === "dica")) g.push(els[i++]);
+      h += `<div class="controles-rotina">${g.map((x) => x.papel === "icone"
+        ? `<button class="btn redondo" title="(sem texto)"${attrs(x)}>${ICONES[x.icone] || "□"}</button>`
+        : `<button class="btn ajuda"${attrs(x)}>?</button>`).join("")}</div>`;
+      continue;
+    }
+    if (e.texto && e.texto.startsWith("Smart Schedule:")) {
+      i++; const menos = els[i]?.acao === "menos" ? els[i++] : null; const mais = els[i]?.acao === "mais" ? els[i++] : null;
+      const nota = els[i]?.texto === "de 00h a 23h" ? els[i++] : null;
+      h += `<div class="secao">Smart Schedule</div><div class="horario">${menos ? `<button class="btn redondo"${attrs(menos)}>−</button>` : ""}<span class="valor">${esc(e.texto.split(": ")[1])}</span>${mais ? `<button class="btn redondo"${attrs(mais)}>+</button>` : ""}</div>${nota ? `<div class="texto situacao">${esc(nota.texto)}</div>` : ""}`;
+      continue;
+    }
+    i++;
+    if (e.papel === "texto") {
+      const x = e.texto;
+      if (["Meus aparelhos", "Aparelhos"].includes(x)) h += `<div class="secao">${esc(x)}</div>`;
+      else if (["Rotinas", "Histórico", "Ajuda"].includes(x) && x === t.titulo) { /* já é o título */ }
+      else if (x.includes(" · ")) { const p = x.split(" · "); h += `<div class="cartao hist"><b>${esc(p[0])}</b> ${esc(p[1])} — ${esc(p[2])}<br><span class="det" style="color:var(--tx2)">por ${esc(p[3])}</span></div>`; }
+      else if (x.startsWith("Regra:")) h += `<div class="texto regra">${esc(x)}</div>`;
+      else if (x.startsWith("Situação:")) h += `<div class="texto situacao">${esc(x)}</div>`;
+      else if (x.startsWith("A rotina \"")) h += `<div class="painel-pq">💡 ${esc(x)}</div>`;
+      else if (t.tela === "S9") h += `<div class="painel-pq">💬 ${esc(x)}</div>`;
+      else if (x.startsWith("Escolha uma resposta")) h += `<div class="texto erro">${esc(x)}</div>`;
+      else if (x === t.titulo) { }
+      else h += `<div class="texto">${esc(x)}</div>`;
+      continue;
+    }
+    if (e.acao === "excluir") { h += `<button class="btn perigo"${attrs(e)}>${esc(e.texto)}</button>`; continue; }
+    if (e.acao === "dica") { h += `<div style="text-align:right;margin:6px 0"><button class="btn ajuda"${attrs(e)}>?</button></div>`; continue; }
+    if (["voltar_S2", "cancelar_edicao"].includes(e.acao)) { h += `<button class="btn link"${attrs(e)}>‹ ${esc(e.texto)}</button>`; continue; }
+    const prim = ["salvar", "confirmar"].includes(e.acao);
+    h += `<div style="margin:8px 0"><button class="btn ${prim ? "prim" : ""}" style="width:100%"${attrs(e)}>${esc(e.texto)}</button></div>`;
+  }
+  return h;
+}
+
+function respostaAjuda(els, item) {
+  const k = els.indexOf(item), prox = els[k + 1];
+  if (prox && prox.papel === "texto" && !prox.acao && item.acao?.startsWith("topico:")) {
+    prox._resp = true;
+    return `<div class="texto resposta">${esc(prox.texto)}</div>`;
+  }
+  return "";
+}
+
+function destacar(opts) {
+  const sel = (a) => telaEl.querySelector(`[data-acao="${CSS.escape(a)}"]`);
+  if (opts.executada) sel(opts.executada)?.classList.add("toque");
+  if (opts.pretendida && opts.pretendida !== opts.executada) sel(opts.pretendida)?.classList.add("pretendido");
+  if (opts.interativo) {
+    telaEl.classList.add("interativo");
+    telaEl.querySelectorAll("[data-acao]").forEach((b) => b.addEventListener("click", () => opts.interativo(b.dataset.acao)));
+  } else telaEl.classList.remove("interativo");
+}
+
+// ------------------------------------------------------------------ replay
+let rp = null, rpI = 0, rpTimer = null;
+async function carregarSessoes() {
+  const s = await (await fetch("/api/sessoes")).json();
+  const sel = $("#sel-sessao");
+  sel.innerHTML = s.map((x) => `<option value="${esc(x.arquivo)}" data-t="${x.tarefas.join(",")}">${esc(x.arquivo)}</option>`).join("");
+  const pref = [...sel.options].find((o) => o.value.startsWith("demo/")) || [...sel.options].find((o) => o.value.includes("lucia-B-llm")) || sel.options[0];
+  if (pref) sel.value = pref.value;
+  atualizarTarefas();
+}
+function atualizarTarefas() {
+  const o = $("#sel-sessao").selectedOptions[0]; if (!o) return;
+  $("#sel-tarefa").innerHTML = o.dataset.t.split(",").map((t) => `<option>${t}</option>`).join("");
+  carregarReplay();
+}
+async function carregarReplay() {
+  pararPlay();
+  const r = await fetch(`/api/replay?arquivo=${encodeURIComponent($("#sel-sessao").value)}&tarefa=${$("#sel-tarefa").value}`);
+  rp = await r.json();
+  if (rp.erro) { $("#rp-passo").textContent = rp.erro; return; }
+  $("#rp-cab").innerHTML = `Persona: <b>${esc(rp.persona)}</b> · versão <b>${rp.versao}</b> · modelo <b>${esc(rp.modelo)}</b>`;
+  $("#rp-instr").textContent = rp.instrucao;
+  rpI = 0; mostrarPasso();
+}
+function mostrarPasso() {
+  const N = rp.quadros.length;
+  $("#rp-cont").textContent = rpI < N ? `passo ${rpI + 1} de ${N}` : `fim (${N} ações)`;
+  if (rpI >= N) {
+    renderTela(rp.final, {});
+    const v = rp.verificador, ok = v.sucesso === true;
+    $("#rp-passo").innerHTML = `<div class="passo">Tela final</div>
+      <div class="veredito ${ok ? "ok" : "nok"}"><b>Verificador externo: ${ok ? "✅ sucesso" : "❌ não atingiu o objetivo"}</b><br>
+      Fim declarado pela interface: <b>${esc(v.fim)}</b><br>
+      Erros: ${v.erros.length ? v.erros.map((x) => `<span class="chip desl">${esc(x)}</span>`).join("") : "nenhum"}<br>
+      Rupturas (MAC): ${v.mac.length ? v.mac.map((x) => `<span class="chip">${esc(x)}</span>`).join("") : "nenhuma"}</div>
+      <div class="info" style="margin-top:8px">O sucesso é decidido pelo estado final da interface, não pelo que o agente disse.</div>`;
+    return;
+  }
+  const q = rp.quadros[rpI];
+  renderTela(q.tela, { executada: q.executada, pretendida: q.deslize ? q.pretendida : null });
+  const mec = q.mecanismos.map((m) => `<span class="chip">${esc(m.mecanismo)}${m.efeito ? ": " + esc(m.efeito) : ""}${m.valor ? " → " + esc(m.valor) : ""}</span>`).join("");
+  $("#rp-passo").innerHTML = `
+    <div class="passo">Passo ${q.passo}</div>
+    ${mec ? `<div>Mecanismos neste passo: ${mec}</div>` : ""}
+    <div class="fala">O agente tocou em: <b>${esc(q.fala_u)}</b></div>
+    ${q.deslize ? `<div><span class="chip desl">Deslize (M3): queria tocar em outro botão, mas acertou o vizinho</span></div>` : ""}
+    ${q.proposta_original ? `<div><span class="chip desl">Hesitação (M4): propôs “${esc(q.proposta_original)}”, mas não executou</span></div>` : ""}
+    ${q.justificativa ? `<div class="just">“${esc(q.justificativa)}”</div>` : ""}
+    ${q.mudancas.length ? `<div>${q.mudancas.map((m) => `<span class="chip est">${esc(m.variavel)}: ${esc(m.antes)} → ${esc(m.depois)} (${esc(m.origem)})</span>`).join("")}</div>` : ""}
+    ${q.o_t ? `<details><summary>O que a IA recebeu neste passo (texto da tela)</summary><pre>${esc(q.o_t)}</pre></details>` : ""}`;
+}
+function pararPlay() { clearInterval(rpTimer); rpTimer = null; $("#rp-play").textContent = "▶ Reproduzir"; }
+$("#rp-play").onclick = () => {
+  if (rpTimer) return pararPlay();
+  if (rpI >= rp.quadros.length) rpI = 0;
+  mostrarPasso(); $("#rp-play").textContent = "⏸ Pausar";
+  rpTimer = setInterval(() => { if (rpI >= rp.quadros.length) return pararPlay(); rpI++; mostrarPasso(); }, 3500);
+};
+$("#rp-prox").onclick = () => { pararPlay(); if (rpI < rp.quadros.length) { rpI++; mostrarPasso(); } };
+$("#rp-ant").onclick = () => { pararPlay(); if (rpI > 0) { rpI--; mostrarPasso(); } };
+$("#sel-sessao").onchange = atualizarTarefas;
+$("#sel-tarefa").onchange = carregarReplay;
+
+// ------------------------------------------------------------------- usar
+async function post(url, corpo) { return (await fetch(url, { method: "POST", body: JSON.stringify(corpo) })).json(); }
+function mostrarManual(r) {
+  if (r.erro) { $("#us-fim").textContent = r.erro; return; }
+  $("#us-cont").textContent = `${r.acoes} ações`;
+  r.mudancas.forEach((m) => { $("#us-log").insertAdjacentHTML("beforeend", `<div>• ${esc(m.variavel)}: ${esc(m.antes)} → ${esc(m.depois)} (${m.origem === "pessoa" ? "você" : "rotina " + esc(m.origem)})</div>`); });
+  if (r.fim) {
+    renderTela(r.tela, {});
+    $("#us-fim").innerHTML = `<div class="veredito ${r.sucesso ? "ok" : "nok"}"><b>${r.fim === "desistencia" ? "Você desistiu." : "Tarefa encerrada."}</b><br>
+      Verificador externo: ${r.sucesso ? "✅ objetivo atingido" : "❌ objetivo não atingido"} (pelo estado final da casa).</div>`;
+  } else renderTela(r.tela, { interativo: async (a) => mostrarManual(await post("/api/tocar", { acao: a })) });
+}
+$("#us-comecar").onclick = async () => {
+  $("#us-log").innerHTML = ""; $("#us-fim").innerHTML = "";
+  const r = await post("/api/nova", { tarefa: $("#us-tarefa").value, versao: $("#us-versao").value });
+  $("#us-instr").classList.remove("oculto"); $("#us-instr").textContent = r.instrucao;
+  mostrarManual(r);
+};
+
+// ------------------------------------------------------------------- modos
+function modo(m) {
+  pararPlay();
+  $("#bt-replay").classList.toggle("ativo", m === "replay"); $("#bt-usar").classList.toggle("ativo", m === "usar");
+  $("#painel-replay").classList.toggle("oculto", m !== "replay"); $("#painel-usar").classList.toggle("oculto", m !== "usar");
+  if (m === "replay") mostrarPasso(); else $("#us-comecar").click();
+}
+$("#bt-replay").onclick = () => modo("replay");
+$("#bt-usar").onclick = () => modo("usar");
+carregarSessoes();
+</script>
+</body>
+</html>

@@ -1,65 +1,78 @@
 # Roteiro da demonstração E5 (3 a 5 minutos)
 
-Objetivo: mostrar uma execução completa do UXAgent, da tarefa recebida à verificação externa, com a interação do agente com a interface, as ações executadas e os eventos registrados.
+Objetivo (enunciado do P3): mostrar uma execução completa do UXAgent, da tarefa recebida à verificação externa, evidenciando a interação do agente com a interface, as ações executadas e os eventos registrados.
 
-Preparação (antes de gravar):
+O vídeo usa duas ferramentas do repositório:
 
-- Terminal com fonte grande, na pasta `uxagent/`, com `ANTHROPIC_API_KEY` definida.
-- Abrir também o caderno E1 (`../fase_4_design/caderno_E1.pdf`) na página da MoLIC e um editor com `configs/persona_lucia.yaml`.
-- Rodar o comando uma vez fora da gravação para conferir que a chave funciona.
-- Sem chave, trocar `--politica llm` por `--politica regras` e dizer no vídeo que é o executor por regras (controle), não o LLM.
+- `python -m uxagent demo`: roda o agente de verdade (Claude, pela API) numa tarefa e grava o registro.
+- `python -m uxagent app`: abre o **CasaFácil no navegador**, com as telas desenhadas como as de um celular. A aba **Replay do agente** refaz, passo a passo, a execução gravada (a mesma máquina de estados que o agente usou), destacando onde ele tocou.
 
-## Cena 1 — O que é e o que vamos ver (0:00–0:30)
+## Preparação (antes de gravar)
 
-Fala: "O UXAgent é um agente que usa o aplicativo CasaFácil no lugar da Lúcia, 68 anos, novata em automação. Ele só vê o que a tela mostra, só pode tocar no que a tela oferece, e quem decide se a tarefa deu certo é um verificador externo. Vamos rodar a tarefa de calibração C1 na versão B."
+1. Ativar "Não Perturbe" e fechar janelas pessoais. Nunca abrir o `~/.zshrc` (tem a chave da API).
+2. **Terminal, aba 1** (deixar rodando durante todo o vídeo):
+   ```bash
+   cd ~/Documents/graduacao/8_periodo/ihc/uxagent
+   .venv/bin/python -m uxagent app
+   ```
+   O navegador abre em `http://localhost:8765`.
+3. **Terminal, aba 2** (⌘T): `cd ~/Documents/graduacao/8_periodo/ihc/uxagent` e aumentar a fonte (⌘+ quatro vezes).
+4. Abrir `configs/persona_lucia.yaml` no TextEdit (`open -a TextEdit configs/persona_lucia.yaml`), só para mostrar.
+5. Abrir o artigo E4 (`open ../fase_5_artigo/E4_UXAgent_IHC_Grupo_Lacerda_Souza.pdf`) na página 5 (Tabela III).
+6. Ensaio: rodar o comando da Cena 3 uma vez fora da gravação.
 
-Mostrar: a figura de arquitetura do artigo E4.
+Gravar com ⌘⇧5 → "Gravar a Tela Inteira" → Opções → Microfone do MacBook → Gravar. Parar no ícone ⏹ da barra de menus.
 
-## Cena 2 — Parâmetros fora do prompt (0:30–1:00)
+## Cena 1 — O app CasaFácil (0:00–0:40)
 
-Mostrar `configs/persona_lucia.yaml` e apontar as distribuições de `p_atr`, `q_rot`, `p_slip`, `p_hes`, `r_nota` e `c_comp`.
+No navegador, aba **Usar o app**, tarefa C1, versão B, **Começar**. Mostrar a tela Início com o aviso amarelo; tocar em **Rotinas** e em **Bom dia** para mostrar os ícones sem texto; voltar ao **Início**.
 
-Fala: "O comportamento do perfil não vem de pedir ao modelo que aja como idosa. Vem de seis mecanismos em código, com parâmetros sorteados a cada sessão a partir destas distribuições, com semente registrada."
+Fala: "Este é o CasaFácil, o protótipo de aplicativo de casa inteligente do nosso trabalho. Ele tem as telas Início, Rotinas, Histórico, Ajuda e, na versão B, o botão 'Por quê?', que explica as ações automáticas. Quem vai usar o app não é uma pessoa: é o UXAgent, um agente baseado no Claude que faz o papel da Lúcia, 68 anos, novata em automação."
 
-## Cena 3 — Execução comentada (1:00–3:00)
+## Cena 2 — Parâmetros fora do prompt (0:40–1:05)
 
+Mostrar o `persona_lucia.yaml` no TextEdit e passar o mouse pelos parâmetros.
+
+Fala: "O comportamento do perfil não vem de pedir ao modelo que aja como idosa. Vem de seis mecanismos em código: chance de atribuir a causa errada, de não reconhecer um ícone, de tocar no botão vizinho, de hesitar, de consultar anotações e de entender a explicação. Cada sessão sorteia esses valores, com semente registrada."
+
+## Cena 3 — O agente rodando de verdade (1:05–1:40)
+
+Terminal, aba 2:
 ```bash
-.venv/bin/python -m uxagent demo --config configs/persona_lucia.yaml --politica llm --versao B --tarefa C1 --semente 7
+.venv/bin/python -m uxagent demo --config configs/persona_lucia.yaml --politica llm --versao B --tarefa C1 --semente 7 --saida dados/demo
 ```
 
-Rolar a saída devagar e apontar:
+Fala, enquanto roda (cerca de 15 s): "Aqui o agente está usando o app de verdade, chamando o Claude pela API. A cada passo ele recebe a descrição da tela e responde com o número de uma ação. Ao final, o verificador externo confere o resultado." Apontar a última linha `VERIFICADOR EXTERNO: sucesso=...`.
 
-1. A instrução literal da tarefa, igual à que uma pessoa leria.
-2. A observação `o_t`: só texto visível, ícones pela forma, ações numeradas. "Não há nomes de variáveis nem o estado interno."
-3. A linha `>>> agente propõe [n] ...` com a justificativa: "o modelo responde só com um número da lista; a justificativa é registrada, mas não é métrica."
-4. Linhas de mecanismo, se aparecerem: `[M1]` crença sobre a causa, `[DESLIZE M3]`, `!!! M4 hesitação`, `[M6]` ao ler o painel "Por quê?".
-5. `estado: ... (persona)` ou `(rotina:...)`: a mudança de estado e sua origem.
-6. O fim declarado pela interface (`concluida`, `desistencia` ou `limite`).
+## Cena 4 — Replay no navegador (1:40–3:50)
 
-## Cena 4 — Verificação externa e registro (3:00–4:15)
+No navegador: **⌘R** (para a página ver a sessão nova), aba **Replay do agente**, sessão `demo/lucia-B-llm-s7.jsonl`, tarefa C1. Avançar com **▶** (próximo passo), um passo de cada vez, comentando:
 
-Apontar a última linha `VERIFICADOR EXTERNO: sucesso=... | erros=[...] | MAC=[...]`.
+- A **instrução** no painel: "a mesma que uma pessoa leria".
+- O **contorno vermelho**: onde o agente tocou. **Contorno laranja tracejado**, se aparecer: onde ele queria tocar, mas o mecanismo de deslize (M3) fez acertar o vizinho.
+- A **justificativa** entre aspas: "o modelo explica a escolha; isso é registrado, mas não é medida".
+- Os **mecanismos** (etiquetas roxas), por exemplo `M1: crenca → eu_outra` ("a persona acha que foi ela mesma") e depois a crença corrigida ao ler o Histórico.
+- As **mudanças de estado** (etiquetas verdes), com a origem: persona ou rotina.
+- Abrir **"O que a IA recebeu neste passo"**: "isto é tudo o que o modelo vê: só o texto da tela; ícones descritos pela forma; nada do estado interno nem da resposta certa".
+- Último passo → **Tela final** com o cartão do **Verificador externo**: "o sucesso não é o que o agente disse; o verificador leu o estado final da casa. Aqui também aparecem os erros, como E-SLP, o deslize de toque, e as rupturas de comunicabilidade".
 
-Fala: "O sucesso não é o que o agente disse: o verificador leu o estado final da interface. Se o agente concluísse com a causa errada, apareceria E-ATR e a etiqueta 'Para mim está bom'."
+## Cena 5 — Registro e fechamento (3:50–4:40)
 
-Abrir o registro indicado na saída e mostrar três eventos:
-
-```bash
-grep -m1 '"observation_delivered"' dados/demo/lucia-B-llm-s7.jsonl | python3 -m json.tool | head -40
-```
-
+Terminal, aba 2:
 ```bash
 grep -m1 '"action_proposed"' dados/demo/lucia-B-llm-s7.jsonl | python3 -m json.tool
 ```
 
+Fala: "Cada passo vira um evento no registro JSON, com horário, persona, cena, fala, modelo e versões, e marcado como sintético. O prompt completo também fica gravado, para auditoria."
+
+Mostrar a Tabela III do artigo E4.
+
+Fala: "O mesmo sistema rodou o piloto: 30 sessões nas tarefas de calibração, sem falhas técnicas. O piloto encontrou problemas no protocolo, que estão documentados no artigo. As tarefas de validação ficam bloqueadas até a configuração ser congelada. Obrigada!"
+
+## Depois de gravar
+
 ```bash
-cat dados/demo/lucia-B-llm-s7.verificado.jsonl | python3 -m json.tool --json-lines | head -60
+avconvert --source ~/Desktop/video.mov --output ~/Desktop/E5_UXAgent_Lacerda_Souza.mp4 --preset Preset1920x1080
 ```
 
-Fala: "Cada evento tem horário, persona, cena, fala e resposta, versões e hashes. O prompt enviado ao modelo fica gravado por inteiro, para auditoria."
-
-## Cena 5 — Fechamento (4:15–4:45)
-
-Fala: "Os mesmos comandos rodam o piloto completo com as tarefas de calibração e calculam sucesso, erros por oportunidade, ações em relação ao KLM e uso de ajuda. As tarefas de validação V1 e V2 ficam bloqueadas até a configuração ser congelada."
-
-Mostrar a Tabela de métricas do artigo E4.
+(Renomear antes o arquivo gravado na Mesa para `video.mov`.) Conferir áudio e duração entre 3 e 5 minutos. O LLM não é determinístico: a execução pode sair diferente da do ensaio; isso não é problema.

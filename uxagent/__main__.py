@@ -88,6 +88,11 @@ def cmd_demo(a):
     print(f"registro: {p}")
 
 
+def cmd_app(a):
+    from .visual import servir
+    servir(a.porta, abrir=not a.sem_navegador)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="uxagent")
     sub = ap.add_subparsers(required=True)
@@ -124,6 +129,10 @@ def main(argv=None):
     d.add_argument("--semente", type=int, default=7)
     d.add_argument("--saida", default="dados/demo")
     d.set_defaults(f=cmd_demo)
+    w = sub.add_parser("app", help="CasaFácil no navegador: usar o app e replay do agente")
+    w.add_argument("--porta", type=int, default=8765)
+    w.add_argument("--sem-navegador", action="store_true", help="não abre o navegador")
+    w.set_defaults(f=cmd_app)
     args = ap.parse_args(argv)
     args.f(args)
 
