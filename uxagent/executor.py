@@ -207,6 +207,12 @@ def _rodar_tarefa(reg: Registro, ctl: Controlador, pol, sistema: str, tid: str, 
         rotulo = el_exec.texto if el_exec.papel == "icone" else f"\"{el_exec.texto}\""
         if fala_d != tela:
             rotulo += f" (abriu a tela \"{observacao.TITULOS.get(fala_d, 'da rotina')}\")"
+        else:
+            # D-02: a memória guarda também o retorno visível da ação (signo dinâmico).
+            visto = observacao.mudancas(els, ui.render())
+            if visto:
+                rotulo += " (a tela mostrou: " + "; ".join(
+                    v.replace("Mudou na tela: ", "") for v in visto) + ")"
         for m in ctl.apos_acao(ui, executar, rotulo, out):
             if m.get("efeito") == "nota_escrita":
                 reg.evento("note_written", {"texto": m["texto"]})

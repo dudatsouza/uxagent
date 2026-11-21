@@ -65,11 +65,13 @@ class EstadoPersona:
     feitos: list[str] = field(default_factory=list)     # ações já feitas nesta tarefa (memória)
     hesitacoes: Counter = field(default_factory=Counter)
     tarefa: str | None = None
+    aparelho_aviso: str | None = None   # aparelho da mudança automática que a persona viu (D-03)
 
     def nova_tarefa(self, tarefa: str):
         """Reinicia x_t entre tarefas, exceto caderno e rótulos aprendidos."""
         self.crenca, self.trajeto, self.hesitacoes, self.tarefa = None, [], Counter(), tarefa
         self.feitos = []
+        self.aparelho_aviso = None
 
     def memoria(self, n: int = MEMORIA_ACOES) -> list[str]:
         """Últimas n ações da tarefa: memória de trabalho do que a persona já fez (HO)."""
@@ -89,6 +91,7 @@ class Controlador:
         aviso = ui.s.get("aviso")
         if not aviso:
             return
+        self.x.aparelho_aviso = aviso["aparelho"]
         if self.x.crenca == f"rotina:{aviso['rotina']}":
             return
         if self.t["p_atr"] > 0 and self.rng.random() < self.t["p_atr"]:
@@ -196,8 +199,10 @@ class Controlador:
         if any(m["origem"] not in ("pessoa",) for m in out["mudancas"]):
             self._m1(ui, ev)
         # Pista de origem no Histórico: revisão da crença (M1).
-        if ui.tela == "S5" and ui.s.get("aviso"):
-            ap = ui.s["aviso"]["aparelho"]
+        # D-03: usa o aparelho do aviso que a persona viu, mesmo que ele já tenha sumido
+        # da tela (por exemplo, depois de "Desfazer" na versão B).
+        if ui.tela == "S5" and self.x.aparelho_aviso:
+            ap = self.x.aparelho_aviso
             # a linha da mudança automática anunciada no aviso (a mais recente não feita por ela)
             linhas = [l for l in ui.s["historico"] if l["aparelho"] == ap and l["origem"] != "pessoa"]
             if linhas:
