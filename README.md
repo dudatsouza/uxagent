@@ -1,7 +1,7 @@
 # UXAgent — Sistema Instrumentado (E2)
 
 Agente proxy baseado em LLM que opera o protótipo **CasaFácil** (automação residencial) no lugar da persona **Lúcia** (68 anos, novata em automação) e gera **dados sintéticos de uso**, auditáveis e comparáveis à linha de base KLM.
-Disciplina de IHC — CEFET-MG, Campus Divinópolis. Design: Caderno E1 (`../fase_4_design/caderno_E1.pdf`).
+Disciplina de IHC — UFCI-MG, Campus Divinópolis. Design: Caderno E1 (`../fase_4_design/caderno_E1.pdf`).
 
 > Todo dado produzido aqui é **SINTÉTICO**: gerado por configuração versionada do UXAgent, sem participação humana. Não representa o comportamento de pessoas idosas reais.
 
